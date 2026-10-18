@@ -282,8 +282,7 @@ assert(worker.includes('caches.open'), 'service worker caches the app');
 for (const icon of ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png']) {
   assert(fs.statSync(new URL(`../${icon}`, import.meta.url)).size > 200, `${icon} exists`);
 }
-assert(html.includes('TODO'), 'pro signup placeholder is marked TODO');
-assert(html.includes('<!-- TODO:'), 'TODO stays in a developer comment');
+assert(!html.includes('TODO'), 'the signup TODO is gone now that the Worker is live');
 assert(!/>\s*TODO:/.test(html), 'TODO is not visible text');
 assert(html.includes('Signups open soon'), 'pro stays quiet until a signup URL is set');
 assert(html.includes('id="signup-form"'), 'pro has a signup form');
@@ -366,7 +365,7 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes("const CACHE = 'starswarm-toolkit-v4'"), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'starswarm-toolkit-v5'"), 'service worker cache was bumped');
 assert(worker.includes('./js/config.js'), 'service worker precaches signup config');
 const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
 assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
@@ -400,7 +399,10 @@ for (const file of shipped) {
   assert(!text.includes('NETFIELD-'), `${file} has no old Pages path`);
 }
 
-assert(SIGNUP_URL === '' && TURNSTILE_SITE_KEY === '', 'signup config is empty until deploy');
+assert(SIGNUP_URL === 'https://toolkit-signup.starswarm.workers.dev/api/signup', 'signup points at the deployed Worker');
+assert(TURNSTILE_SITE_KEY === '', 'Turnstile stays off for now');
+assert(html.includes('free check still runs in your browser with no account'), 'the Pro card is honest next to the signup');
+assert(!html.includes('no account and no server'), 'the Pro card does not claim there is no server');
 assert(shouldShowSignupForm('') === false, 'an empty signup URL hides the form');
 assert(shouldShowSignupForm('https://toolkit-signup.starswarm.workers.dev/api/signup') === true, 'a signup URL shows the form');
 assert(shouldLoadTurnstile('', 'site-key') === false, 'Turnstile stays off without a signup URL');

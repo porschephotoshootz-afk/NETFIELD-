@@ -1,6 +1,5 @@
-// Leave both empty until the signup Worker is deployed.
-// SIGNUP_URL: https://toolkit-signup.starswarm.workers.dev/api/signup
-export const SIGNUP_URL = '';
+// Signup Worker endpoint. An empty string hides the form and shows "Signups open soon".
+export const SIGNUP_URL = 'https://toolkit-signup.starswarm.workers.dev/api/signup';
 
 // Public Turnstile site key. Empty means the page does not load the Turnstile script.
 export const TURNSTILE_SITE_KEY = '';

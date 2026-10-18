@@ -8,7 +8,7 @@ Nothing in this folder is deployed by the app change. The owner deploys it from 
 
 ## Before it can go live
 
-1. Create the KV namespace and paste the id into `wrangler.toml` in place of `REPLACE_WITH_KV_NAMESPACE_ID`:
+1. The KV namespace `toolkit-signup-kv` exists and its id is already in `wrangler.toml`. For a fresh account, create one and replace the id:
 
    ```sh
    npx wrangler kv namespace create SIGNUPS
