@@ -9,6 +9,23 @@ import {
 import { redactSecrets } from '../js/deep.js';
 import { SAMPLES } from '../js/samples.js';
 import { SIGNUP_URL, TURNSTILE_SITE_KEY, shouldLoadTurnstile, shouldShowSignupForm } from '../js/config.js';
+import {
+  alertsFromThreats,
+  filterAlerts,
+  loadAlertState,
+  markDone,
+  notificationDecision,
+  safeHttps,
+  saveAlertState,
+  sortAlerts,
+} from '../js/alerts.js';
+import {
+  approvalFromInput,
+  detectChainInput,
+  explorerLinks,
+  flagAccount,
+  formatUnits,
+} from '../js/wallet.js';
 import { runSignupTests } from '../worker/signup/test.js';
 
 let passed = 0;
@@ -365,7 +382,7 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes("const CACHE = 'starswarm-toolkit-v5'"), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'starswarm-toolkit-v6'"), 'service worker cache was bumped');
 assert(worker.includes('./js/config.js'), 'service worker precaches signup config');
 const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
 assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
@@ -418,6 +435,141 @@ assert(appJs.includes('shouldShowSignupForm(SIGNUP_URL)'), 'the form follows the
 assert(appJs.includes('shouldLoadTurnstile(SIGNUP_URL, TURNSTILE_SITE_KEY)'), 'Turnstile is gated by config');
 assert(appJs.includes('challenges.cloudflare.com/turnstile/v0/api.js'), 'the Turnstile script URL is present for a configured site key');
 assert(!appJs.includes('Pro is planned'), 'the old planned line is gone');
+
+const vitalik = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+const evmAddress = detectChainInput(vitalik);
+assert(evmAddress.ok && evmAddress.chain === 'evm' && evmAddress.kind === 'address', 'a 0x address is Ethereum');
+assert(explorerLinks(evmAddress)[0].href === `https://etherscan.io/address/${vitalik}`, 'etherscan address link');
+const solAddress = '42RLPACwZPx3vYYmxSueqsogfynBDqXK298EDsNoyoHi';
+const solDetected = detectChainInput(solAddress);
+assert(solDetected.ok && solDetected.chain === 'solana' && solDetected.kind === 'address', 'base58 32-44 is Solana');
+assert(explorerLinks(solDetected)[0].href === `https://solscan.io/account/${solAddress}`, 'solscan account link');
+const evmTx = `0x${'ab'.repeat(32)}`;
+const txDetected = detectChainInput(evmTx);
+assert(txDetected.ok && txDetected.chain === 'evm' && txDetected.kind === 'tx', '64 hex digits are an Ethereum transaction');
+assert(explorerLinks(txDetected)[0].href === `https://etherscan.io/tx/${evmTx}`, 'etherscan transaction link');
+const solTx = '1'.repeat(88);
+const solTxDetected = detectChainInput(solTx);
+assert(solTxDetected.ok && solTxDetected.chain === 'solana' && solTxDetected.kind === 'tx', 'base58 87-88 is a Solana signature');
+assert(explorerLinks(solTxDetected)[0].href === `https://solscan.io/tx/${solTx}`, 'solscan transaction link');
+assert(!detectChainInput('').ok, 'an empty paste is rejected');
+assert(!detectChainInput('vitalik.eth').ok, 'a name is rejected');
+assert(detectChainInput('vitalik.eth').error.includes('does not look up names'), 'the name error is plain');
+assert(!detectChainInput('0x1234').ok, 'a short 0x value is rejected');
+assert(!detectChainInput('hello world').ok, 'spaces are rejected');
+assert(formatUnits(1500000000n, 9) === '1.5', 'lamports format');
+assert(formatUnits(0, 18) === '0', 'zero wei formats');
+
+const flagFile = JSON.parse(fs.readFileSync(new URL('../data/scam-addresses.json', import.meta.url), 'utf8'));
+const catalog = flagFile.entries;
+const listed = flagAccount({ address: catalog[0].address, chain: catalog[0].chain, catalog, txCount: 3 });
+assert(listed.some((flag) => flag.id === 'listed'), 'a catalog address is flagged');
+assert(listed.every((flag) => /signal, not proof/i.test(flag.meaning)), 'a list match is a signal, not proof');
+const fresh = flagAccount({ address: vitalik, chain: 'evm', catalog, txCount: 0 });
+assert(fresh.some((flag) => flag.id === 'new-address'), 'no history is flagged');
+assert(!fresh.some((flag) => flag.id === 'listed'), 'the sample address is not on the flag list');
+const spender = '11'.repeat(20);
+const unlimitedInput = `0x095ea7b3${'0'.repeat(24)}${spender}${'f'.repeat(64)}`;
+const unlimited = approvalFromInput(unlimitedInput);
+assert(unlimited && unlimited.unlimited && unlimited.spender === `0x${spender}`, 'unlimited approval is recognized');
+const limited = approvalFromInput(`0x095ea7b3${'0'.repeat(24)}${spender}${'0'.repeat(63)}1`);
+assert(limited && limited.unlimited === false, 'a small approval is not unlimited');
+const approvalFlags = flagAccount({
+  address: vitalik,
+  chain: 'evm',
+  catalog,
+  txCount: 4,
+  approvals: [unlimited],
+});
+assert(approvalFlags.some((flag) => flag.id === 'unlimited-approval' && flag.href === `https://revoke.cash/address/${vitalik}`), 'unlimited approval links to revoke.cash');
+const evmFlag = catalog.find((entry) => entry.chain === 'evm');
+const touched = flagAccount({ address: vitalik, chain: 'evm', catalog, txCount: 2, counterparties: [evmFlag.address] });
+assert(touched.some((flag) => flag.id === 'touched-flagged'), 'a flagged counterparty is called out');
+
+const sampleAlerts = [
+  { id: 'a', severity: 'low', date: '2026-01-01', meaning: 'low', steps: ['fix'] },
+  { id: 'b', severity: 'critical', date: '2026-02-01', meaning: 'critical', steps: ['fix'] },
+  { id: 'c', severity: 'high', date: '2026-03-01', meaning: 'high', steps: ['fix'] },
+];
+assert(sortAlerts(sampleAlerts)[0].id === 'b', 'critical sorts first');
+assert(sortAlerts(sampleAlerts, 'newest')[0].id === 'c', 'newest sort uses the date');
+const done = markDone({}, 'b', true);
+assert(filterAlerts(sampleAlerts, { done, showDone: false }).every((alert) => alert.id !== 'b'), 'done alerts can be hidden');
+assert(filterAlerts(sampleAlerts, { severity: 'high' }).map((alert) => alert.id).join() === 'c', 'severity filter');
+const memory = {
+  store: {},
+  getItem(key) { return this.store[key] || null; },
+  setItem(key, value) { this.store[key] = value; },
+};
+saveAlertState(memory, { done, notify: false });
+assert(loadAlertState(memory).done.b === true, 'alert done state round-trips');
+assert(loadAlertState({ getItem() { return '{'; } }).done && Object.keys(loadAlertState({ getItem() { return '{'; } }).done).length === 0, 'bad alert json does not throw');
+assert(notificationDecision({ optedIn: false, permission: 'granted', hasCritical: true }).notify === false, 'notifications stay off without opt-in');
+assert(notificationDecision({ optedIn: true, permission: 'default', hasCritical: true }).notify === false, 'notifications wait for permission');
+assert(notificationDecision({ optedIn: true, permission: 'granted', hasCritical: true }).notify === true, 'notifications fire only after opt-in');
+assert(safeHttps('http://example.com') === '', 'plain http links are dropped');
+assert(safeHttps('https://etherscan.io/address/abc') === 'https://etherscan.io/address/abc', 'https links stay');
+
+const threats = JSON.parse(fs.readFileSync(new URL('../data/threats.json', import.meta.url), 'utf8'));
+const bots = JSON.parse(fs.readFileSync(new URL('../data/bots.json', import.meta.url), 'utf8'));
+const hotfixes = JSON.parse(fs.readFileSync(new URL('../data/hotfixes.json', import.meta.url), 'utf8'));
+assert(threats.updated === '2026-10-16' && threats.catalogVersion === '2026.10.16', 'threat list date comes from the CISA feed');
+assert(threats.source.startsWith('https://www.cisa.gov/'), 'threats cite the CISA feed');
+assert(threats.entries.length === 36, `threat count (${threats.entries.length})`);
+assert(bots.entries.length === 25 && bots.updated === '2026-10-18', 'bot list count and date');
+assert(hotfixes.entries.length === 36 && hotfixes.checklist.length === 7, 'hotfix advisories and checklist');
+assert(flagFile.entries.length === 16 && flagFile.updated === '2026-10-01', 'flag list is the fetched OFAC sample');
+for (const entry of threats.entries) {
+  assert(/^CVE-\d{4}-\d+$/.test(entry.cve), `${entry.cve} is a CVE id`);
+  assert(entry.vendor && entry.product && entry.dateAdded && entry.description && entry.fix, `${entry.cve} has the public fields`);
+  assert(entry.source.startsWith('https://') && entry.advisory.startsWith('https://'), `${entry.cve} has source links`);
+  assert(entry.updated === entry.dateAdded, `${entry.cve} carries its catalog date`);
+  assert(!/proof of concept|metasploit|shellcode/i.test(entry.description + entry.fix), `${entry.cve} stays defensive`);
+}
+const built = alertsFromThreats(threats.entries);
+assert(built.length === threats.entries.length && built.every((alert) => alert.severity && alert.meaning && alert.steps.length >= 2), 'threats become actionable alerts');
+for (const entry of bots.entries) {
+  assert(entry.pattern && entry.meaning && entry.block && entry.block.robots && entry.block.cloudflare, `${entry.id} has a block`);
+  assert(entry.source.startsWith('https://') && entry.updated, `${entry.id} has a source and date`);
+}
+for (const entry of hotfixes.entries) {
+  assert(entry.advisory.startsWith('https://') && entry.source.startsWith('https://') && entry.fix && entry.updated, `${entry.id} has a real advisory`);
+}
+for (const entry of hotfixes.checklist) {
+  assert(entry.title && entry.detail && entry.source.startsWith('https://') && entry.updated, `${entry.id} checklist item is sourced`);
+}
+for (const entry of flagFile.entries) {
+  assert(entry.address && (entry.chain === 'evm' || entry.chain === 'solana'), 'flag entry has a chain');
+  assert(entry.source.startsWith('https://') && entry.updated, 'flag entry has a source and date');
+}
+assert(flagAccount({ address: vitalik, chain: 'evm', catalog, txCount: 9 }).length === 0, 'a normal address with history is not flagged');
+
+assert(html.includes('id="view-home"'), 'home screen exists');
+assert(html.includes('id="view-alerts"'), 'alerts screen exists');
+assert(html.includes('id="view-threats"'), 'threats screen exists');
+assert(html.includes('id="view-bots"'), 'bots screen exists');
+assert(html.includes('id="view-hotfixes"'), 'hotfixes screen exists');
+assert(html.includes('id="view-wallet"'), 'wallet screen exists');
+assert(html.includes('never asks for a seed phrase'), 'wallet check says it does not ask for a seed');
+assert(!html.includes('Connect wallet'), 'there is no wallet connect button');
+assert(!appJs.includes('eth_requestAccounts'), 'the app does not request accounts');
+assert(html.includes('https://solscan.io/account/'), 'solscan account link is on the page');
+assert(html.includes('https://etherscan.io/address/'), 'etherscan address link is on the page');
+assert(html.includes('fonts/cinzel-decorative-latin-700.woff2'), 'cinzel decorative is preloaded');
+assert(css.includes("font-family: 'Cinzel Decorative'"), 'wordmark can use cinzel decorative');
+assert(css.includes("font-family: 'Inter'"), 'UI can use Inter');
+assert(css.includes('fonts/inter-latin-400.woff2'), 'inter is local');
+assert(worker.includes('./js/wallet.js') && worker.includes('./data/threats.json'), 'service worker precaches the new screens');
+for (const font of ['fonts/inter-latin-400.woff2', 'fonts/inter-latin-700.woff2', 'fonts/cinzel-latin-700.woff2', 'fonts/cinzel-decorative-latin-700.woff2']) {
+  const bytes = fs.readFileSync(new URL(`../${font}`, import.meta.url));
+  assert(bytes.slice(0, 4).toString() === 'wOF2', `${font} is woff2`);
+}
+const extraLive = ['js/alerts.js', 'js/wallet.js', 'data/threats.json', 'data/bots.json', 'data/hotfixes.json', 'data/scam-addresses.json'];
+for (const file of extraLive) {
+  const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+  assert(!/netfield/i.test(text), `${file} has no NetField text`);
+  assert(!text.includes('NETFIELD-'), `${file} has no old Pages path`);
+}
 
 await runSignupTests(assert);
 

@@ -1,4 +1,4 @@
-/* Outfit and JetBrains Mono, latin subset, SIL Open Font License. */
+/* Outfit, Inter, Cinzel, Cinzel Decorative, and JetBrains Mono. Latin subset, SIL Open Font License. */
 @font-face {
   font-family: 'Outfit';
   font-style: normal;
@@ -15,27 +15,55 @@
   src: url('../fonts/jetbrains-mono-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/inter-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter-latin-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/cinzel-latin-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cinzel Decorative';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/cinzel-decorative-latin-700.woff2') format('woff2');
+}
 
 :root {
-  --bg0: #060d18;
-  --bg1: #0c1628;
-  --bg2: #111f38;
-  --bg3: #162848;
-  --acc: #00d4ff;
-  --acc2: #0099cc;
-  --grn: #00e676;
-  --org: #ff9800;
-  --red: #ff6b6b;
-  --ylw: #ffd600;
-  --pur: #b388ff;
-  --txt: #e8f4fd;
-  --txt2: rgba(232, 244, 253, 0.78);
-  --txt3: rgba(232, 244, 253, 0.55);
-  --border: rgba(0, 212, 255, 0.22);
-  --border2: rgba(0, 212, 255, 0.1);
-  --card: rgba(12, 22, 40, 0.94);
+  --bg0: #030610;
+  --bg1: #07101f;
+  --bg2: #0c1830;
+  --bg3: #13233f;
+  --acc: #00e5ff;
+  --acc2: #5f7daa;
+  --grn: #00e5ff;
+  --org: #ffbe3c;
+  --red: #ff5252;
+  --ylw: #ffbe3c;
+  --pur: #6e1ebe;
+  --txt: #f0f6ff;
+  --txt2: #c5d4ea;
+  --txt3: #96a8be;
+  --border: rgba(150, 180, 215, 0.35);
+  --border2: rgba(150, 180, 215, 0.16);
+  --card: rgba(7, 16, 31, 0.94);
   --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  --sans: 'Outfit', 'Avenir Next', 'Segoe UI', sans-serif;
+  --sans: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
   --radius: 16px;
   --header: 168px;
   color-scheme: dark;
@@ -46,7 +74,10 @@ html { scroll-behavior: auto; }
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg0);
+  background:
+    radial-gradient(900px 420px at 8% -10%, rgba(110, 30, 190, 0.22), transparent 60%),
+    radial-gradient(640px 360px at 100% 0%, rgba(120, 10, 30, 0.2), transparent 55%),
+    linear-gradient(180deg, #030610 0%, #091630 100%);
   color: var(--txt);
   font-family: var(--sans);
   font-size: 17px;
@@ -58,9 +89,12 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 50% at 15% 0%, rgba(0, 120, 190, 0.16), transparent 60%),
-    radial-gradient(ellipse 50% 40% at 90% 90%, rgba(0, 180, 120, 0.07), transparent 55%);
+  background-image:
+    radial-gradient(1px 1px at 12px 18px, rgba(230, 240, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 80px 64px, rgba(180, 210, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 140px 28px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 40px 120px, rgba(140, 180, 255, 0.45), transparent);
+  background-size: 180px 160px;
 }
 button, textarea, select, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -114,7 +148,20 @@ h1 {
   letter-spacing: -0.03em;
   color: var(--acc);
 }
-.wordmark { letter-spacing: -0.03em; }
+.wordmark {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: #f0f6ff;
+}
+.brand-kicker {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: #96b4d7;
+}
 .product-name {
   max-width: 100%;
   overflow: hidden;
@@ -128,7 +175,7 @@ h1 {
 }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .wordmark {
-    background: linear-gradient(90deg, var(--acc), #9be7ff);
+    background: linear-gradient(180deg, #f5faff 0%, #5f7daa 46%, #f5faff 54%, #8aa0be 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -498,7 +545,7 @@ label.settings { display: block; margin-top: 12px; }
   .brand img { width: 32px; height: 32px; border-radius: 10px; }
   h1 { font-size: 18px; }
   .product-name { font-size: 11px; line-height: 1.2; }
-  .brand-sub { margin-top: 0; font-size: 13px; line-height: 1.2; }
+  .brand-sub { margin-top: 0; font-size: 16px; line-height: 1.2; }
   .header-actions button { padding-inline: 10px; }
   .tab { min-height: 40px; padding: 8px; }
   #swarm-board, #report { scroll-margin-top: 128px; }
@@ -525,4 +572,152 @@ label.settings { display: block; margin-top: 12px; }
 
 @media (prefers-reduced-motion: reduce) {
   .bot.scanning::after, .status-dot { animation: none; }
+}
+
+.section-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.section-nav .tab { flex: none; white-space: nowrap; }
+.screen-title {
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.cover {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(160, 190, 225, 0.45);
+  margin-bottom: 14px;
+}
+.hub {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.hub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  min-height: 72px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(12, 22, 40, 0.88);
+}
+.hub-card strong { font-size: 18px; }
+.hub-card span { color: var(--txt2); font-size: 16px; }
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.toolbar button, .checkline {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 8px 14px;
+}
+.checkline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+.toolbar button.active {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.alert-card, .list-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(8, 16, 32, 0.92);
+  padding: 14px;
+  margin: 10px 0;
+}
+.alert-card.done { opacity: 0.62; }
+.sev {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sev.critical { color: #ffd0d0; background: #4a1020; }
+.sev.high { color: #ffe3b0; background: #3d2a0c; }
+.sev.medium { color: #d7ecff; background: #12304a; }
+.sev.low, .sev.info { color: #d8fff8; background: #0c3338; }
+.steps { margin: 8px 0 0; padding-left: 18px; }
+.steps li { margin: 6px 0; }
+.form-error {
+  color: #ffb4b4;
+  background: #3a1018;
+  border: 1px solid #ff5252;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 10px;
+}
+.plain-links { padding-left: 18px; }
+.plain-links a, .list-card a, .alert-card a { color: var(--acc); }
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(3, 6, 16, 0.94);
+  border-top: 1px solid var(--border2);
+}
+.nav-item {
+  min-height: 48px;
+  border-radius: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--txt3);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 4px 2px;
+}
+.nav-item.active { color: var(--acc); background: var(--bg3); }
+#wallet-input, #threats-search, #bots-search, #hotfixes-search {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg1);
+  padding: 12px;
+  font-size: 17px;
+}
+.meta-line { color: var(--txt3); font-size: 16px; margin-top: 6px; }
+.cmd-block {
+  font-family: var(--mono);
+  font-size: 14px;
+  white-space: pre-wrap;
+  background: #070d18;
+  border-radius: 12px;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+@media (max-width: 799px) {
+  .section-nav { display: none; }
+  #content { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 800px) {
+  .bottom-nav { display: none; }
+  .hub { grid-template-columns: 1fr 1fr; }
 }

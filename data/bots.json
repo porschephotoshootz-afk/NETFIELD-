@@ -1,0 +1,358 @@
+{
+  "name": "Bad bots",
+  "updated": "2026-10-18",
+  "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+  "note": "Subset fetched on 2026-10-18. The ai.robots.txt robots.txt had 188 user-agent tokens. The nginx bad-bot user-agent list had 700 lines. Credential stuffing is included as a pattern because those tools imitate a browser. Sample of the public lists, not the full lists.",
+  "entries": [
+    {
+      "id": "gptbot",
+      "name": "GPTBot",
+      "kind": "ai-crawler",
+      "pattern": "GPTBot",
+      "meaning": "GPTBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: GPTBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"GPTBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "claudebot",
+      "name": "ClaudeBot",
+      "kind": "ai-crawler",
+      "pattern": "ClaudeBot",
+      "meaning": "ClaudeBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: ClaudeBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"ClaudeBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "claude-searchbot",
+      "name": "Claude-SearchBot",
+      "kind": "ai-crawler",
+      "pattern": "Claude-SearchBot",
+      "meaning": "Claude-SearchBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Claude-SearchBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Claude-SearchBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "chatgpt-user",
+      "name": "ChatGPT-User",
+      "kind": "ai-crawler",
+      "pattern": "ChatGPT-User",
+      "meaning": "ChatGPT-User is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: ChatGPT-User\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"ChatGPT-User\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "oai-searchbot",
+      "name": "OAI-SearchBot",
+      "kind": "ai-crawler",
+      "pattern": "OAI-SearchBot",
+      "meaning": "OAI-SearchBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: OAI-SearchBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"OAI-SearchBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "bytespider",
+      "name": "Bytespider",
+      "kind": "ai-crawler",
+      "pattern": "Bytespider",
+      "meaning": "Bytespider is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Bytespider\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Bytespider\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "ccbot",
+      "name": "CCBot",
+      "kind": "ai-crawler",
+      "pattern": "CCBot",
+      "meaning": "CCBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: CCBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"CCBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "amazonbot",
+      "name": "Amazonbot",
+      "kind": "ai-crawler",
+      "pattern": "Amazonbot",
+      "meaning": "Amazonbot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Amazonbot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Amazonbot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "perplexitybot",
+      "name": "PerplexityBot",
+      "kind": "ai-crawler",
+      "pattern": "PerplexityBot",
+      "meaning": "PerplexityBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: PerplexityBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"PerplexityBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "google-extended",
+      "name": "Google-Extended",
+      "kind": "ai-crawler",
+      "pattern": "Google-Extended",
+      "meaning": "Google-Extended is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Google-Extended\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Google-Extended\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "applebot-extended",
+      "name": "Applebot-Extended",
+      "kind": "ai-crawler",
+      "pattern": "Applebot-Extended",
+      "meaning": "Applebot-Extended is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Applebot-Extended\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Applebot-Extended\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "meta-externalagent",
+      "name": "Meta-ExternalAgent",
+      "kind": "ai-crawler",
+      "pattern": "Meta-ExternalAgent",
+      "meaning": "Meta-ExternalAgent is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Meta-ExternalAgent\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Meta-ExternalAgent\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "diffbot",
+      "name": "Diffbot",
+      "kind": "ai-crawler",
+      "pattern": "Diffbot",
+      "meaning": "Diffbot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Diffbot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Diffbot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "petalbot",
+      "name": "PetalBot",
+      "kind": "ai-crawler",
+      "pattern": "PetalBot",
+      "meaning": "PetalBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: PetalBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"PetalBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "imagesiftbot",
+      "name": "ImagesiftBot",
+      "kind": "ai-crawler",
+      "pattern": "ImagesiftBot",
+      "meaning": "ImagesiftBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: ImagesiftBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"ImagesiftBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "tiktokspider",
+      "name": "TikTokSpider",
+      "kind": "ai-crawler",
+      "pattern": "TikTokSpider",
+      "meaning": "TikTokSpider is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: TikTokSpider\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"TikTokSpider\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "anthropic-ai",
+      "name": "anthropic-ai",
+      "kind": "ai-crawler",
+      "pattern": "anthropic-ai",
+      "meaning": "anthropic-ai is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: anthropic-ai\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"anthropic-ai\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "facebookbot",
+      "name": "FacebookBot",
+      "kind": "ai-crawler",
+      "pattern": "FacebookBot",
+      "meaning": "FacebookBot is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: FacebookBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"FacebookBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "scrapy",
+      "name": "Scrapy",
+      "kind": "ai-crawler",
+      "pattern": "Scrapy",
+      "meaning": "Scrapy is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: Scrapy\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"Scrapy\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "semrushbot-ocob",
+      "name": "SemrushBot-OCOB",
+      "kind": "ai-crawler",
+      "pattern": "SemrushBot-OCOB",
+      "meaning": "SemrushBot-OCOB is a user-agent token on the public ai.robots.txt disallow list. Site owners use that list when they do not want this crawler fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: SemrushBot-OCOB\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"SemrushBot-OCOB\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.txt",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "ahrefsbot",
+      "name": "AhrefsBot",
+      "kind": "scraper",
+      "pattern": "AhrefsBot",
+      "meaning": "AhrefsBot is on the public nginx ultimate bad bot blocker user-agent list. Blocking it on your own site stops that crawler from fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: AhrefsBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"AhrefsBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/blob/master/_generator_lists/bad-user-agents.list",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "blexbot",
+      "name": "BLEXBot",
+      "kind": "scraper",
+      "pattern": "BLEXBot",
+      "meaning": "BLEXBot is on the public nginx ultimate bad bot blocker user-agent list. Blocking it on your own site stops that crawler from fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: BLEXBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"BLEXBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/blob/master/_generator_lists/bad-user-agents.list",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "mj12bot",
+      "name": "MJ12bot",
+      "kind": "scraper",
+      "pattern": "MJ12bot",
+      "meaning": "MJ12bot is on the public nginx ultimate bad bot blocker user-agent list. Blocking it on your own site stops that crawler from fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: MJ12bot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"MJ12bot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/blob/master/_generator_lists/bad-user-agents.list",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "semrushbot",
+      "name": "SemrushBot",
+      "kind": "scraper",
+      "pattern": "SemrushBot",
+      "meaning": "SemrushBot is on the public nginx ultimate bad bot blocker user-agent list. Blocking it on your own site stops that crawler from fetching pages. A matching user agent is a signal, not proof of abuse.",
+      "block": {
+        "robots": "User-agent: SemrushBot\nDisallow: /",
+        "cloudflare": "(http.user_agent contains \"SemrushBot\")",
+        "note": "On your own site, add the robots.txt lines and, if you use Cloudflare, a custom WAF rule with the expression above and the action Block."
+      },
+      "source": "https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/blob/master/_generator_lists/bad-user-agents.list",
+      "updated": "2026-10-18"
+    },
+    {
+      "id": "credential-stuffing",
+      "name": "Credential stuffing",
+      "kind": "pattern",
+      "pattern": "Often a normal browser user agent. There is no single string to block.",
+      "meaning": "Credential stuffing reuses stolen passwords and usually pretends to be a normal browser. NCSC recommends a strong separate email password and 2-step verification, which cuts off the accounts these attacks target. This is a pattern, not a copied user-agent string.",
+      "block": {
+        "robots": "A robots.txt block does not stop credential stuffing.",
+        "cloudflare": "On your own zone, rate-limit the sign-in path and challenge repeated failures. Pair that with 2-step verification on the accounts.",
+        "note": "Do not put a seed phrase, password, or customer list in a block rule."
+      },
+      "source": "https://www.ncsc.gov.uk/collection/top-tips-for-staying-secure-online",
+      "updated": "2026-10-18"
+    }
+  ]
+}

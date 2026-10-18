@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#060d18">
+<meta name="theme-color" content="#030610">
 <meta name="description" content="StarSwarm Security Agentic Toolkit is an offline rule engine. It ranks Cisco output and symptoms on your device. AI analysis is optional and uses your own key.">
 <meta property="og:title" content="StarSwarm Security Agentic Toolkit">
 <meta property="og:description" content="An offline rule engine for Cisco output and network symptoms. It runs on your device. AI analysis is optional and uses your own key.">
@@ -28,16 +28,18 @@
 <link rel="stylesheet" href="css/app.css">
 <link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cinzel-decorative-latin-700.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
-<a class="skip" href="#paste">Skip to input</a>
+<a class="skip" href="#content">Skip to content</a>
 <div id="app">
   <header id="header">
     <div class="header-top">
       <div class="brand">
-        <img src="icons/icon-192.png" width="40" height="40" alt="">
+        <img src="images/shield.png" width="44" height="44" alt="">
         <div>
-          <h1><span class="wordmark">StarSwarm</span> <span class="product-name">Security Agentic Toolkit</span></h1>
+          <h1><span class="wordmark">STARSWARM</span> <span class="brand-kicker">AGENTIC SECURITY</span></h1>
           <p class="brand-sub"><span class="status-dot" id="status-dot"></span> <span id="status-text">On this phone</span></p>
         </div>
       </div>
@@ -46,15 +48,105 @@
         <button type="button" id="settings-btn">Settings</button>
       </div>
     </div>
-    <nav class="tabs" aria-label="Sections">
-      <button type="button" class="tab active" data-view="swarm" aria-current="page">Analyze</button>
+    <nav class="section-nav" aria-label="Sections">
+      <button type="button" class="tab active" data-view="home" aria-current="page">Home</button>
+      <button type="button" class="tab" data-view="swarm">Analyze</button>
+      <button type="button" class="tab" data-view="alerts">Alerts</button>
+      <button type="button" class="tab" data-view="threats">Threats</button>
+      <button type="button" class="tab" data-view="bots">Bots</button>
+      <button type="button" class="tab" data-view="hotfixes">Hotfixes</button>
+      <button type="button" class="tab" data-view="wallet">Wallet</button>
       <button type="button" class="tab" data-view="study">Study</button>
       <button type="button" class="tab" data-view="pro">Pro</button>
     </nav>
   </header>
 
   <main id="content">
-    <section id="view-swarm" class="view">
+    <section id="view-home" class="view">
+      <img class="cover" src="images/cover.jpg" alt="">
+      <h2 class="screen-title">Security Agentic Toolkit</h2>
+      <p class="lede">An offline rule engine on this device ranks what to fix first. AI analysis is optional and uses your own key.</p>
+      <div class="hub">
+        <button type="button" class="hub-card" data-view="swarm"><strong>Analyze</strong><span>Rank a paste on this device.</span></button>
+        <button type="button" class="hub-card" data-view="alerts"><strong>Alerts</strong><span>Severity, plain meaning, and the fix.</span></button>
+        <button type="button" class="hub-card" data-view="threats"><strong>Threats</strong><span>CISA known-exploited bugs on network gear.</span></button>
+        <button type="button" class="hub-card" data-view="bots"><strong>Bots</strong><span>Crawlers to block on your own site.</span></button>
+        <button type="button" class="hub-card" data-view="hotfixes"><strong>Hotfixes</strong><span>Vendor advisories and a hardening list.</span></button>
+        <button type="button" class="hub-card" data-view="wallet"><strong>Wallet check</strong><span>Read-only. No seed phrase and no signing.</span></button>
+        <button type="button" class="hub-card" data-view="study"><strong>Study</strong><span>CCNA field cards on this device.</span></button>
+        <button type="button" class="hub-card" data-view="pro"><strong>Pro</strong><span>Leave an email for when Pro opens.</span></button>
+      </div>
+    </section>
+
+    <section id="view-alerts" class="view" hidden>
+      <h2 class="screen-title">Alerts</h2>
+      <p class="lede">Each card is something to check on your own network. It has a severity, what it means, and the fix. Marking it done stays on this device.</p>
+      <div class="toolbar" id="alert-filters" role="group" aria-label="Filter by severity"></div>
+      <div class="toolbar">
+        <label class="checkline"><input id="alert-sort" type="checkbox"> Newest first</label>
+        <label class="checkline"><input id="alert-show-done" type="checkbox"> Show done</label>
+      </div>
+      <label class="checkline"><input id="alert-notify" type="checkbox"> Notify this device about open critical alerts</label>
+      <p class="note">Notifications stay on this phone. The browser asks only after you opt in. Nothing is sent to a server.</p>
+      <div id="alert-list"></div>
+    </section>
+
+    <section id="view-threats" class="view" hidden>
+      <h2 class="screen-title">Threats</h2>
+      <p class="lede" id="threats-meta">Known exploited bugs on routers, firewalls, VPNs, and similar gear.</p>
+      <label class="field-label" for="threats-search">Search threats</label>
+      <input id="threats-search" type="search" autocomplete="off">
+      <div id="threats-list"></div>
+    </section>
+
+    <section id="view-bots" class="view" hidden>
+      <h2 class="screen-title">Bots</h2>
+      <p class="lede" id="bots-meta">User agents and patterns to block on your own site.</p>
+      <label class="field-label" for="bots-search">Search bots</label>
+      <input id="bots-search" type="search" autocomplete="off">
+      <div id="bots-list"></div>
+    </section>
+
+    <section id="view-hotfixes" class="view" hidden>
+      <h2 class="screen-title">Hotfixes</h2>
+      <p class="lede" id="hotfixes-meta">Vendor advisories for the threats list, plus a home and small-office checklist.</p>
+      <label class="field-label" for="hotfixes-search">Search hotfixes</label>
+      <input id="hotfixes-search" type="search" autocomplete="off">
+      <div id="hotfixes-list"></div>
+    </section>
+
+    <section id="view-wallet" class="view" hidden>
+      <h2 class="screen-title">Wallet check</h2>
+      <p class="lede">Paste a public Solana or Ethereum address, or a transaction hash. This check is read-only. It never asks for a seed phrase or a private key, and it does not connect a wallet or sign anything.</p>
+      <label class="field-label" for="wallet-input">Address or transaction</label>
+      <textarea id="wallet-input" spellcheck="false" autocomplete="off" placeholder="Public address or transaction hash"></textarea>
+      <div class="input-row">
+        <button type="button" class="copy" id="wallet-check">Check</button>
+      </div>
+      <p id="wallet-error" class="form-error" role="alert" hidden></p>
+      <div id="wallet-result"></div>
+      <h3 class="kicker">Explorer links</h3>
+      <ul class="plain-links">
+        <li><a href="https://solscan.io/account/" rel="noreferrer">Solscan account</a></li>
+        <li><a href="https://solscan.io/tx/" rel="noreferrer">Solscan transaction</a></li>
+        <li><a href="https://etherscan.io/address/" rel="noreferrer">Etherscan address</a></li>
+        <li><a href="https://etherscan.io/tx/" rel="noreferrer">Etherscan transaction</a></li>
+      </ul>
+      <p class="note">After a valid paste, the matching link is filled in so it opens in one tap. Optional explorer keys in Settings stay in this browser and are sent only to that API.</p>
+    </section>
+
+    <section id="view-more" class="view" hidden>
+      <h2 class="screen-title">More</h2>
+      <div class="hub">
+        <button type="button" class="hub-card" data-view="threats"><strong>Threats</strong><span>CISA known-exploited bugs on network gear.</span></button>
+        <button type="button" class="hub-card" data-view="bots"><strong>Bots</strong><span>Crawlers to block on your own site.</span></button>
+        <button type="button" class="hub-card" data-view="hotfixes"><strong>Hotfixes</strong><span>Vendor advisories and a hardening list.</span></button>
+        <button type="button" class="hub-card" data-view="study"><strong>Study</strong><span>CCNA field cards on this device.</span></button>
+        <button type="button" class="hub-card" data-view="pro"><strong>Pro</strong><span>Leave an email for when Pro opens.</span></button>
+      </div>
+    </section>
+
+    <section id="view-swarm" class="view" hidden>
       <div class="swarm-layout">
         <div class="swarm-in">
           <p class="lede">Paste show output or a symptom. An offline rule engine on this device ranks what to fix first. AI analysis is optional and uses your own key.</p>
@@ -127,6 +219,19 @@
       <input id="api-key" type="password" autocomplete="off" placeholder="Paste a key. It is not saved in the repo.">
     </label>
     <p class="note" id="key-state">No key saved.</p>
+    <h3>Explorer keys</h3>
+    <p class="lede">Optional. A key reads recent public transactions from Etherscan or Solscan. It stays in this browser and is sent only to that API. Never put a seed phrase or a private key here.</p>
+    <label class="settings">Etherscan API key
+      <input id="etherscan-key" type="password" autocomplete="off" placeholder="Optional. Sent only to api.etherscan.io">
+    </label>
+    <label class="settings">Solscan API key
+      <input id="solscan-key" type="password" autocomplete="off" placeholder="Optional. Sent only to pro-api.solscan.io">
+    </label>
+    <p class="note" id="wallet-key-state">No explorer key saved.</p>
+    <div class="dialog-actions">
+      <button type="button" class="copy" id="save-wallet-keys">Save explorer keys</button>
+      <button type="button" id="clear-wallet-keys">Remove explorer keys</button>
+    </div>
     <div class="dialog-actions">
       <button type="submit" class="copy" id="save-key">Save on this phone</button>
       <button type="button" id="clear-key">Remove key</button>
@@ -135,6 +240,13 @@
   </form>
 </dialog>
 
+<nav class="bottom-nav" aria-label="Primary">
+  <button type="button" class="nav-item active" data-view="home">Home</button>
+  <button type="button" class="nav-item" data-view="swarm">Analyze</button>
+  <button type="button" class="nav-item" data-view="alerts">Alerts</button>
+  <button type="button" class="nav-item" data-view="wallet">Wallet</button>
+  <button type="button" class="nav-item" data-view="more">More</button>
+</nav>
 <div id="toast" role="status" aria-hidden="true"></div>
 <noscript><p>StarSwarm needs JavaScript. Analysis still stays on your device.</p></noscript>
 <script type="module" src="js/app.js"></script>

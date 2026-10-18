@@ -1,4 +1,4 @@
-const CACHE = 'starswarm-toolkit-v5';
+const CACHE = 'starswarm-toolkit-v6';
 
 const ASSETS = [
   './',
@@ -11,8 +11,20 @@ const ASSETS = [
   './js/app.js',
   './js/config.js',
   './js/deep.js',
+  './js/alerts.js',
+  './js/wallet.js',
+  './data/threats.json',
+  './data/bots.json',
+  './data/hotfixes.json',
+  './data/scam-addresses.json',
+  './images/shield.png',
+  './images/cover.jpg',
   './fonts/outfit-latin.woff2',
   './fonts/jetbrains-mono-latin.woff2',
+  './fonts/inter-latin-400.woff2',
+  './fonts/inter-latin-700.woff2',
+  './fonts/cinzel-latin-700.woff2',
+  './fonts/cinzel-decorative-latin-700.woff2',
   './icons/favicon-32.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

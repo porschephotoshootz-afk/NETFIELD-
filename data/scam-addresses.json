@@ -1,0 +1,136 @@
+{
+  "name": "Public flag list",
+  "updated": "2026-10-01",
+  "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+  "note": "Sample of OFAC SDN digital-currency addresses. The fetched ETH file had 120 addresses and the SOL file had 4. Lists-branch commit date 2026-10-01 (https://github.com/0xB10C/ofac-sanctioned-digital-currency-addresses/commit/6ae2472c439b9bb2788f8df662052ae31854aa97). That project extracts addresses from the Treasury SDN Advanced XML. This file keeps every fetched SOL address and the first 12 fetched ETH addresses. It is a sample, not the full sanctions list. A match is a signal, not proof.",
+  "entries": [
+    {
+      "address": "42RLPACwZPx3vYYmxSueqsogfynBDqXK298EDsNoyoHi",
+      "chain": "solana",
+      "list": "OFAC SDN digital currency (SOL sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_SOL.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "6wjqWWra8ombzaw6VHrG5xpQ972jCYF6bbHiFCbWmr4U",
+      "chain": "solana",
+      "list": "OFAC SDN digital currency (SOL sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_SOL.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "Fc1EwQUZyTEagaDvA1utHXCcZNyG1x2PLt2DfNu1cJdH",
+      "chain": "solana",
+      "list": "OFAC SDN digital currency (SOL sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_SOL.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "FuCC7GoYwt5TsNTjWL23Xx9UKCvC18chjMEFPL3vJDCC",
+      "chain": "solana",
+      "list": "OFAC SDN digital currency (SOL sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_SOL.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x0330070FD38Ec3bB94F58FA55D40368271E9e54A",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x038989cbb1710c72b9920dc4fa529158f463e72c",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x04DBA1194ee10112fE6C3207C0687DEf0e78baCf",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x08723392Ed15743cc38513C4925f5e6be5c17243",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x08b2eFdcdB8822EfE5ad0Eae55517cf5DC544251",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x0931cA4D13BB4ba75D9B7132AB690265D749a5E7",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x098B716B8Aaf21512996dC57EB0615e2383E2f96",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x0Ee5067b06776A89CcC7dC8Ee369984AD7Db5e06",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x12de548F79a50D2bd05481C8515C1eF5183666a9",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x14779CEC0B117d5194c750C55Ea1f42086631964",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x1967d8af5bd86a497fb3dd7899a020e47560daaf",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    },
+    {
+      "address": "0x1999ef52700c34de7ec2b68a28aafb37db0c5ade",
+      "chain": "evm",
+      "list": "OFAC SDN digital currency (ETH sample)",
+      "source": "https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.json",
+      "upstream": "https://ofac.treasury.gov/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists",
+      "updated": "2026-10-01"
+    }
+  ]
+}

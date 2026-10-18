@@ -3,6 +3,34 @@ import { SAMPLES } from './samples.js';
 import { CS_DATA, REF_DATA, SCENARIOS } from './study.js';
 import { clearKey, deepAnalyze, hasKey, loadKey, redactSecrets, saveKey } from './deep.js';
 import { SIGNUP_URL, TURNSTILE_SITE_KEY, shouldLoadTurnstile, shouldShowSignupForm } from './config.js';
+import {
+  alertsFromThreats,
+  filterAlerts,
+  loadAlertState,
+  markDone,
+  notificationDecision,
+  safeHttps,
+  saveAlertState,
+  unseenCritical,
+} from './alerts.js';
+import {
+  clearWalletKeys,
+  detectChainInput,
+  explorerLinks,
+  flagAccount,
+  loadWalletKeys,
+  readEtherscan,
+  readPublicChain,
+  readSolscan,
+  saveWalletKeys,
+} from './wallet.js';
+
+const VIEWS = ['home', 'swarm', 'alerts', 'threats', 'bots', 'hotfixes', 'wallet', 'study', 'pro', 'more'];
+const MORE_VIEWS = new Set(['threats', 'bots', 'hotfixes', 'study', 'pro', 'more']);
+let listCache = null;
+let alertState = { done: {}, notify: false };
+let alertSeverity = 'all';
+let notifiedThisSession = false;
 
 const REVEAL_MS = 420;
 const DEVICES = [
@@ -378,16 +406,317 @@ async function sendDeep(button, slot, redacted) {
   }
 }
 
+async function ensureLists() {
+  if (listCache) return listCache;
+  const [threats, bots, hotfixes, flags] = await Promise.all([
+    fetch('./data/threats.json').then((response) => response.json()),
+    fetch('./data/bots.json').then((response) => response.json()),
+    fetch('./data/hotfixes.json').then((response) => response.json()),
+    fetch('./data/scam-addresses.json').then((response) => response.json()),
+  ]);
+  listCache = { threats, bots, hotfixes, flags };
+  return listCache;
+}
+
+function ensureAlertFilters() {
+  const bar = document.querySelector('#alert-filters');
+  if (bar.childElementCount) return;
+  for (const [id, label] of [['all', 'All'], ['critical', 'Critical'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']]) {
+    const button = el('button', { type: 'button', text: label });
+    if (id === alertSeverity) button.classList.add('active');
+    button.addEventListener('click', () => {
+      alertSeverity = id;
+      bar.querySelectorAll('button').forEach((node) => node.classList.toggle('active', node === button));
+      paintAlerts();
+    });
+    bar.append(button);
+  }
+}
+
+function alertCard(alert) {
+  const done = Boolean(alertState.done[alert.id]);
+  const card = el('article', { class: done ? 'alert-card done' : 'alert-card' });
+  card.append(
+    el('span', { class: `sev ${alert.severity}`, text: alert.severity }),
+    el('h3', { text: alert.title }),
+    el('p', { class: 'meta-line', text: alert.cve || '' }),
+    el('p', { text: alert.meaning }),
+  );
+  const steps = el('ol', { class: 'steps' });
+  for (const step of alert.steps || []) steps.append(el('li', { text: step }));
+  card.append(steps);
+  if (alert.cisaAction) {
+    const details = el('details');
+    details.append(el('summary', { text: 'CISA required action' }), el('p', { text: alert.cisaAction }));
+    card.append(details);
+  }
+  const advisory = safeHttps(alert.advisory);
+  const source = safeHttps(alert.source);
+  if (advisory) card.append(el('p', {}, [el('a', { href: advisory, target: '_blank', rel: 'noreferrer', text: 'Vendor advisory' })]));
+  if (source && source !== advisory) card.append(el('p', {}, [el('a', { href: source, target: '_blank', rel: 'noreferrer', text: 'Source' })]));
+  const button = el('button', { type: 'button', class: 'copy', text: done ? 'Mark as open' : 'Mark as done' });
+  button.addEventListener('click', () => {
+    alertState = { ...alertState, done: markDone(alertState.done, alert.id, !done) };
+    saveAlertState(localStorage, alertState);
+    paintAlerts();
+  });
+  card.append(button);
+  return card;
+}
+
+async function paintAlerts() {
+  ensureAlertFilters();
+  const root = document.querySelector('#alert-list');
+  root.replaceChildren(el('p', { text: 'Loading alerts…' }));
+  try {
+    const lists = await ensureLists();
+    const alerts = alertsFromThreats(lists.threats.entries);
+    const sort = document.querySelector('#alert-sort').checked ? 'newest' : 'severity';
+    const visible = filterAlerts(alerts, {
+      severity: alertSeverity,
+      done: alertState.done,
+      showDone: document.querySelector('#alert-show-done').checked,
+      sort,
+    });
+    root.replaceChildren();
+    if (!visible.length) {
+      root.append(el('p', { text: 'Nothing in this filter.' }));
+    } else {
+      for (const alert of visible) root.append(alertCard(alert));
+    }
+    maybeNotify(alerts);
+  } catch {
+    root.replaceChildren(el('p', { text: 'Alerts could not be loaded. Open this page once while online so the list is saved on the device.' }));
+  }
+}
+
+function maybeNotify(alerts) {
+  const decision = notificationDecision({
+    optedIn: alertState.notify,
+    permission: typeof Notification === 'undefined' ? 'denied' : Notification.permission,
+    hasCritical: unseenCritical(alerts, alertState.done),
+  });
+  if (!decision.notify || notifiedThisSession || typeof Notification === 'undefined') return;
+  notifiedThisSession = true;
+  new Notification('StarSwarm', { body: 'A critical alert is still open on this device.' });
+}
+
+function entryMatches(entry, query) {
+  if (!query) return true;
+  return JSON.stringify(entry).toLowerCase().includes(query.toLowerCase());
+}
+
+function linkLine(href, label) {
+  const safe = safeHttps(href);
+  if (!safe) return null;
+  return el('p', {}, [el('a', { href: safe, target: '_blank', rel: 'noreferrer', text: label })]);
+}
+
+function threatCard(entry) {
+  const card = el('article', { class: 'list-card' });
+  card.append(
+    el('span', { class: `sev ${entry.severity}`, text: entry.severity }),
+    el('h3', { text: `${entry.vendor} ${entry.product}` }),
+    el('p', { class: 'meta-line', text: `${entry.cve} · added ${entry.dateAdded}` }),
+    el('p', { text: entry.description }),
+    el('p', { text: entry.fix }),
+  );
+  const advisory = linkLine(entry.advisory, 'Vendor advisory');
+  const source = linkLine(entry.source, 'NVD source');
+  if (advisory) card.append(advisory);
+  if (source) card.append(source);
+  return card;
+}
+
+function crawlerCard(entry) {
+  const card = el('article', { class: 'list-card' });
+  card.append(
+    el('h3', { text: entry.name }),
+    el('p', { class: 'meta-line', text: entry.kind }),
+    el('p', { text: entry.meaning }),
+    el('p', { text: 'robots.txt' }),
+    el('pre', { class: 'cmd-block', text: entry.block?.robots || '' }),
+    el('p', { text: 'Cloudflare WAF expression for your own zone' }),
+    el('pre', { class: 'cmd-block', text: entry.block?.cloudflare || '' }),
+  );
+  const source = linkLine(entry.source, 'Source');
+  if (source) card.append(source);
+  return card;
+}
+
+function hotfixCard(entry) {
+  const card = el('article', { class: 'list-card' });
+  card.append(
+    el('h3', { text: entry.title }),
+    el('p', { class: 'meta-line', text: entry.cve ? `${entry.cve} · ${entry.dateAdded}` : `Updated ${entry.updated}` }),
+    el('p', { text: entry.fix || entry.detail }),
+  );
+  const source = linkLine(entry.advisory || entry.source, entry.advisory ? 'Vendor advisory' : 'Source');
+  if (source) card.append(source);
+  return card;
+}
+
+async function paintList(name) {
+  const lists = await ensureLists();
+  if (name === 'threats') {
+    document.querySelector('#threats-meta').textContent = `Updated ${lists.threats.updated}. Catalog ${lists.threats.catalogVersion}. ${lists.threats.entries.length} entries.`;
+    fillCards('#threats-list', lists.threats.entries, document.querySelector('#threats-search').value, threatCard);
+  } else if (name === 'bots') {
+    document.querySelector('#bots-meta').textContent = `Updated ${lists.bots.updated}. ${lists.bots.entries.length} entries. ${lists.bots.note}`;
+    fillCards('#bots-list', lists.bots.entries, document.querySelector('#bots-search').value, crawlerCard);
+  } else {
+    document.querySelector('#hotfixes-meta').textContent = `Updated ${lists.hotfixes.updated}. ${lists.hotfixes.entries.length} advisories and ${lists.hotfixes.checklist.length} checklist items.`;
+    const query = document.querySelector('#hotfixes-search').value;
+    const root = document.querySelector('#hotfixes-list');
+    root.replaceChildren(el('h3', { text: 'Hardening checklist' }));
+    for (const item of lists.hotfixes.checklist.filter((entry) => entryMatches(entry, query))) root.append(hotfixCard(item));
+    root.append(el('h3', { text: 'Vendor advisories' }));
+    for (const item of lists.hotfixes.entries.filter((entry) => entryMatches(entry, query))) root.append(hotfixCard(item));
+  }
+}
+
+function fillCards(selector, entries, query, render) {
+  const root = document.querySelector(selector);
+  root.replaceChildren();
+  const visible = entries.filter((entry) => entryMatches(entry, query));
+  if (!visible.length) {
+    root.append(el('p', { text: 'Nothing matches that search.' }));
+    return;
+  }
+  for (const entry of visible) root.append(render(entry));
+}
+
+async function checkWallet() {
+  const error = document.querySelector('#wallet-error');
+  const result = document.querySelector('#wallet-result');
+  const detected = detectChainInput(document.querySelector('#wallet-input').value);
+  if (!detected.ok) {
+    error.hidden = false;
+    error.textContent = detected.error;
+    result.replaceChildren();
+    return;
+  }
+  error.hidden = true;
+  result.replaceChildren(el('p', { text: 'Reading the public chain…' }));
+  const summary = el('article', { class: 'list-card' });
+  summary.append(el('h3', { text: `${detected.chain === 'evm' ? 'Ethereum' : 'Solana'} ${detected.kind}` }));
+  const links = el('div', { class: 'toolbar' });
+  for (const link of explorerLinks(detected)) {
+    links.append(el('a', { class: 'copy', href: link.href, target: '_blank', rel: 'noreferrer', text: link.label }));
+  }
+  summary.append(links);
+  if (detected.kind === 'tx') {
+    result.replaceChildren(summary, el('p', { class: 'note', text: 'Transaction hashes open in the explorer. Balance is checked for addresses.' }));
+    return;
+  }
+  const keys = loadWalletKeys(localStorage);
+  let catalog = [];
+  try {
+    catalog = (await ensureLists()).flags.entries;
+  } catch {
+    catalog = [];
+  }
+  const live = await readPublicChain(detected);
+  if (live.ok && !live.skipped) {
+    summary.append(el('p', { text: `Balance: ${live.balance} ${live.unit}` }));
+    if (live.historyNote) summary.append(el('p', { class: 'meta-line', text: live.historyNote }));
+  } else if (live.error) {
+    summary.append(el('p', { class: 'note', text: live.error }));
+  }
+  let approvals = [];
+  let counterparties = [];
+  let transactions = [];
+  if (detected.chain === 'evm' && keys.etherscan) {
+    const extra = await readEtherscan(detected.value, keys.etherscan);
+    if (extra.transactions) {
+      transactions = extra.transactions;
+      approvals = extra.approvals || [];
+      counterparties = extra.counterparties || [];
+    } else if (extra.error) summary.append(el('p', { class: 'note', text: extra.error }));
+  }
+  if (detected.chain === 'solana' && keys.solscan) {
+    const extra = await readSolscan(detected.value, keys.solscan);
+    if (extra.transactions) {
+      transactions = extra.transactions;
+      counterparties = extra.counterparties || [];
+    } else if (extra.error) summary.append(el('p', { class: 'note', text: extra.error }));
+  }
+  const flags = flagAccount({
+    address: detected.value,
+    chain: detected.chain,
+    catalog,
+    txCount: live.ok ? live.txCount : null,
+    approvals,
+    counterparties,
+  });
+  const flagBox = el('div');
+  if (!flags.length) {
+    flagBox.append(el('p', { text: 'No flag on the public list shipped with this app. That is not proof the address is safe.' }));
+  }
+  for (const flag of flags) {
+    const card = el('article', { class: 'alert-card' });
+    card.append(el('span', { class: `sev ${flag.severity}`, text: flag.severity }), el('h3', { text: flag.title }), el('p', { text: flag.meaning }));
+    const source = linkLine(flag.href, flag.id === 'unlimited-approval' ? 'Review on revoke.cash' : 'Source');
+    if (source) card.append(source);
+    flagBox.append(card);
+  }
+  const txBox = el('div');
+  for (const tx of transactions) {
+    const href = detected.chain === 'evm' ? `https://etherscan.io/tx/${tx.hash}` : `https://solscan.io/tx/${tx.hash}`;
+    const row = el('article', { class: 'list-card' });
+    row.append(el('p', { text: tx.hash }));
+    if (tx.from) row.append(el('p', { class: 'meta-line', text: `From ${tx.from}` }));
+    if (tx.to) row.append(el('p', { class: 'meta-line', text: `To ${tx.to}` }));
+    const open = linkLine(href, 'Open transaction');
+    if (open) row.append(open);
+    txBox.append(row);
+  }
+  result.replaceChildren(summary, flagBox, txBox);
+}
+
+function paintWalletKeys() {
+  const saved = loadWalletKeys(localStorage);
+  const parts = [];
+  if (saved.etherscan) parts.push('Etherscan');
+  if (saved.solscan) parts.push('Solscan');
+  document.querySelector('#wallet-key-state').textContent = parts.length
+    ? `${parts.join(' and ')} key saved in this browser. The fields stay blank.`
+    : 'No explorer key saved.';
+}
+
+function persistWalletKeys() {
+  const existing = loadWalletKeys(localStorage);
+  const etherscan = document.querySelector('#etherscan-key').value.trim() || existing.etherscan;
+  const solscan = document.querySelector('#solscan-key').value.trim() || existing.solscan;
+  if (!etherscan && !solscan) {
+    showToast('Paste an explorer key first. The check still runs without one.');
+    return;
+  }
+  saveWalletKeys(localStorage, { etherscan, solscan });
+  document.querySelector('#etherscan-key').value = '';
+  document.querySelector('#solscan-key').value = '';
+  paintWalletKeys();
+  showToast('Explorer keys saved on this phone');
+}
+
 function showView(name) {
+  if (!VIEWS.includes(name)) name = 'home';
   for (const button of document.querySelectorAll('.tab')) {
     const on = button.dataset.view === name;
     button.classList.toggle('active', on);
     button.toggleAttribute('aria-current', on);
   }
-  for (const view of ['swarm', 'study', 'pro']) {
-    document.getElementById(`view-${view}`).hidden = view !== name;
+  for (const button of document.querySelectorAll('.nav-item')) {
+    const on = button.dataset.view === name || (button.dataset.view === 'more' && MORE_VIEWS.has(name));
+    button.classList.toggle('active', on);
+  }
+  for (const view of VIEWS) {
+    const node = document.getElementById(`view-${view}`);
+    if (node) node.hidden = view !== name;
   }
   history.replaceState(null, '', `#${name}`);
+  if (name === 'alerts') paintAlerts();
+  if (name === 'threats' || name === 'bots' || name === 'hotfixes') paintList(name);
 }
 
 function paintStudy() {
@@ -567,7 +896,8 @@ async function submitSignup(event, status) {
 }
 
 function wire() {
-  document.querySelectorAll('.tab').forEach((button) => {
+  alertState = loadAlertState(localStorage);
+  document.querySelectorAll('[data-view]').forEach((button) => {
     button.addEventListener('click', () => showView(button.dataset.view));
   });
   const studyTabs = [...document.querySelectorAll('.study-tab')];
@@ -604,8 +934,54 @@ function wire() {
   });
   document.querySelector('#settings-btn').addEventListener('click', () => {
     paintKeyState();
+    paintWalletKeys();
     settings.showModal();
   });
+  document.querySelector('#save-wallet-keys').addEventListener('click', () => persistWalletKeys());
+  document.querySelector('#clear-wallet-keys').addEventListener('click', () => {
+    clearWalletKeys(localStorage);
+    document.querySelector('#etherscan-key').value = '';
+    document.querySelector('#solscan-key').value = '';
+    paintWalletKeys();
+    showToast('Explorer keys removed');
+  });
+  document.querySelector('#alert-sort').addEventListener('change', () => paintAlerts());
+  document.querySelector('#alert-show-done').addEventListener('change', () => paintAlerts());
+  document.querySelector('#alert-notify').checked = alertState.notify && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+  document.querySelector('#alert-notify').addEventListener('change', async () => {
+    const box = document.querySelector('#alert-notify');
+    if (!box.checked) {
+      alertState = { ...alertState, notify: false };
+      saveAlertState(localStorage, alertState);
+      return;
+    }
+    if (typeof Notification === 'undefined') {
+      box.checked = false;
+      showToast('This browser has no local notifications');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      box.checked = false;
+      alertState = { ...alertState, notify: false };
+      saveAlertState(localStorage, alertState);
+      showToast('Notifications stay off until you allow them');
+      return;
+    }
+    alertState = { ...alertState, notify: true };
+    saveAlertState(localStorage, alertState);
+    try {
+      maybeNotify(alertsFromThreats((await ensureLists()).threats.entries));
+    } catch {
+      /* the list can load later */
+    }
+  });
+  document.querySelector('#wallet-check').addEventListener('click', () => checkWallet());
+  for (const [id, view] of [['threats-search', 'threats'], ['bots-search', 'bots'], ['hotfixes-search', 'hotfixes']]) {
+    document.querySelector(`#${id}`).addEventListener('input', () => {
+      if (!document.getElementById(`view-${view}`).hidden) paintList(view);
+    });
+  }
   document.querySelector('#settings-form').addEventListener('submit', (event) => {
     event.preventDefault();
     persistKey();
@@ -633,7 +1009,7 @@ function wire() {
   window.addEventListener('offline', () => setStatus(statusMessage));
   const hash = location.hash.replace('#', '');
   wireSignup();
-  if (hash === 'study' || hash === 'pro') showView(hash);
+  if (VIEWS.includes(hash) && hash !== 'home') showView(hash);
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
