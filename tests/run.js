@@ -383,7 +383,12 @@ for (const file of userFacing) {
   assert(!text.includes('NetField'), `${file} has no NetField name`);
   assert(!text.includes('Pocket Swarm'), `${file} has no Pocket Swarm name`);
 }
-assert(html.includes('Formerly NetField'), 'the app keeps a formerly note');
+assert(!html.includes('Formerly NetField'), 'the live app does not keep a formerly note');
+const liveFiles = ['index.html', 'manifest.json', 'sw.js', 'css/app.css', 'js/app.js', 'js/config.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js'];
+for (const file of liveFiles) {
+  const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replaceAll("const STORAGE_KEY = 'netfield.byok.v1'", '');
+  assert(!/netfield/i.test(text), `${file} has no NetField text`);
+}
 assert(html.includes('<title>StarSwarm Security Agentic Toolkit</title>'), 'page title');
 assert(html.includes('content="StarSwarm"'), 'home screen title is the short name');
 assert(html.includes('property="og:title" content="StarSwarm Security Agentic Toolkit"'), 'open graph title');
