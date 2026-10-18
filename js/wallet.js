@@ -3,7 +3,13 @@
  */
 
 export const WALLET_STORAGE_KEY = 'starswarm.wallet.v1';
-export const SOLANA_RPC = 'https://api.mainnet-beta.solana.com';
+// Tried from a browser on 2026-10-18. The first three answered getBalance. Mainnet is last because it returns 403.
+export const SOLANA_RPCS = [
+  'https://solana-rpc.publicnode.com',
+  'https://public.rpc.solanavibestation.com',
+  'https://solana.api.pocket.network',
+  'https://api.mainnet-beta.solana.com',
+];
 export const ETH_RPCS = ['https://cloudflare-eth.com', 'https://ethereum-rpc.publicnode.com'];
 
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]+$/;
@@ -75,8 +81,7 @@ export function flagAccount({ address, chain, catalog, txCount, approvals, count
       href: listed.source,
     });
   }
-  const count = Number(txCount);
-  if (Number.isFinite(count) && count === 0) {
+  if (typeof txCount === 'number' && Number.isFinite(txCount) && txCount === 0) {
     flags.push({
       id: 'new-address',
       severity: 'medium',
@@ -107,6 +112,18 @@ export function flagAccount({ address, chain, catalog, txCount, approvals, count
     break;
   }
   return flags;
+}
+
+export function flagsAfterLookup(live, details) {
+  if (!live || live.ok !== true || live.skipped) return [];
+  return flagAccount({
+    address: details?.address,
+    chain: details?.chain,
+    catalog: details?.catalog,
+    txCount: live.txCount,
+    approvals: details?.approvals,
+    counterparties: details?.counterparties,
+  });
 }
 
 export function formatUnits(raw, decimals) {
@@ -159,18 +176,18 @@ async function rpc(url, body, fetchImpl) {
   return response.json();
 }
 
-export async function readPublicChain(detected, fetchImpl = fetch) {
-  if (!detected?.ok || detected.kind !== 'address') return { ok: true, skipped: true };
-  try {
-    if (detected.chain === 'solana') {
-      const body = await rpc(SOLANA_RPC, [
-        { jsonrpc: '2.0', id: 1, method: 'getBalance', params: [detected.value] },
-        { jsonrpc: '2.0', id: 2, method: 'getSignaturesForAddress', params: [detected.value, { limit: 5 }] },
-      ], fetchImpl);
-      const rows = Array.isArray(body) ? body : [body];
-      const balance = rows.find((row) => row.id === 1);
-      const signatures = rows.find((row) => row.id === 2);
+async function readSolana(address, fetchImpl) {
+  let rateLimited = false;
+  for (const url of SOLANA_RPCS) {
+    try {
+      const [balance, signatures] = await Promise.all([
+        rpc(url, { jsonrpc: '2.0', id: 1, method: 'getBalance', params: [address] }, fetchImpl),
+        rpc(url, { jsonrpc: '2.0', id: 2, method: 'getSignaturesForAddress', params: [address, { limit: 5 }] }, fetchImpl),
+      ]);
+      const message = `${balance?.error?.message || ''} ${signatures?.error?.message || ''}`;
       if (balance?.error || signatures?.error) {
+        if (/rate|limit/i.test(message)) rateLimited = true;
+        if (/rate|limit|forbidden|blocked|not allowed/i.test(message)) continue;
         return { ok: false, error: 'The public Solana RPC did not return this account. The Solscan link still works.' };
       }
       const lamports = balance?.result?.value ?? 0;
@@ -182,7 +199,20 @@ export async function readPublicChain(detected, fetchImpl = fetch) {
         txCount: list.length === 0 ? 0 : null,
         historyNote: list.length === 0 ? 'No recent signatures.' : `${list.length} recent signature${list.length === 1 ? '' : 's'} shown.`,
       };
+    } catch (error) {
+      if (error.rateLimit) rateLimited = true;
     }
+  }
+  if (rateLimited) {
+    return { ok: false, error: 'The public RPC is rate-limiting. The explorer link still works. Try again in a minute.' };
+  }
+  return { ok: false, error: 'The public RPC could not be reached. The explorer link still works.' };
+}
+
+export async function readPublicChain(detected, fetchImpl = fetch) {
+  if (!detected?.ok || detected.kind !== 'address') return { ok: true, skipped: true };
+  try {
+    if (detected.chain === 'solana') return readSolana(detected.value, fetchImpl);
     let lastError = null;
     for (const url of ETH_RPCS) {
       try {

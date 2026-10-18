@@ -24,7 +24,10 @@ import {
   detectChainInput,
   explorerLinks,
   flagAccount,
+  flagsAfterLookup,
   formatUnits,
+  readPublicChain,
+  SOLANA_RPCS,
 } from '../js/wallet.js';
 import { runSignupTests } from '../worker/signup/test.js';
 
@@ -384,7 +387,7 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes("const CACHE = 'starswarm-toolkit-v6'"), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'starswarm-toolkit-v7'"), 'service worker cache was bumped');
 assert(worker.includes('./js/config.js'), 'service worker precaches signup config');
 const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
 assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
@@ -547,8 +550,46 @@ for (const entry of flagFile.entries) {
   assert(entry.source.startsWith('https://') && entry.updated, 'flag entry has a source and date');
 }
 assert(flagAccount({ address: vitalik, chain: 'evm', catalog, txCount: 9 }).length === 0, 'a normal address with history is not flagged');
+assert(!flagAccount({ address: vitalik, chain: 'evm', catalog, txCount: null }).some((flag) => flag.id === 'new-address'), 'a missing count is not no history');
+assert(!flagAccount({ address: vitalik, chain: 'evm', catalog }).some((flag) => flag.id === 'new-address'), 'an omitted count is not no history');
+const failedLookup = { ok: false, error: 'The public RPC could not be reached. The explorer link still works.' };
+const failedFlags = flagsAfterLookup(failedLookup, {
+  address: vitalik,
+  chain: 'evm',
+  catalog,
+  approvals: [unlimited],
+  counterparties: [evmFlag.address],
+});
+assert(failedFlags.length === 0, 'a failed lookup draws no flag conclusions');
+assert(!failedLookup.error.includes(';') && !failedLookup.error.includes('\u2014'), 'the lookup failure note has no semicolon or em dash');
+assert(SOLANA_RPCS[0] === 'https://solana-rpc.publicnode.com', 'the first Solana RPC is publicnode');
+assert(SOLANA_RPCS.at(-1) === 'https://api.mainnet-beta.solana.com', 'mainnet-beta is the last Solana RPC');
+const solSeen = [];
+const solLive = await readPublicChain(solDetected, async (url, init) => {
+  solSeen.push(url);
+  const payload = JSON.parse(init.body);
+  if (url === SOLANA_RPCS[0]) return { ok: false, status: 403, json: async () => ({}) };
+  if (url !== SOLANA_RPCS[1]) throw new Error(`unexpected host ${url}`);
+  if (payload.method === 'getBalance') {
+    return { ok: true, status: 200, json: async () => ({ id: 1, result: { value: 2500000000 } }) };
+  }
+  return { ok: true, status: 200, json: async () => ({ id: 2, result: [{ signature: 'sig' }] }) };
+});
+assert(solLive.ok && solLive.balance === '2.5' && solLive.unit === 'SOL', 'the second Solana RPC supplies the balance');
+assert(solSeen[0] === SOLANA_RPCS[0] && solSeen.includes(SOLANA_RPCS[1]), 'Solana RPCs are tried in order');
+assert(!solSeen.includes(SOLANA_RPCS.at(-1)), 'a later RPC is not called after a balance comes back');
+assert(flagsAfterLookup(solLive, { address: solAddress, chain: 'solana', catalog }).every((flag) => flag.id !== 'new-address'), 'a funded account is not called new');
+const allDown = await readPublicChain(solDetected, async () => ({ ok: false, status: 403, json: async () => ({}) }));
+assert(allDown.ok === false && allDown.error === failedLookup.error, 'every Solana RPC failing says the chain could not be reached');
+assert(flagsAfterLookup(allDown, { address: solAddress, chain: 'solana', catalog, approvals: [{ unlimited: true }] }).length === 0, 'no flags when every Solana RPC fails');
+const proxy = fs.readFileSync(new URL('../worker/proxy/worker.js', import.meta.url), 'utf8');
+for (const host of SOLANA_RPCS) assert(proxy.includes(host), `${host} is in the toolkit CSP`);
 
 assert(html.includes('id="view-home"'), 'home screen exists');
+assert(!html.includes('class="cover"'), 'the home banner is not repeated');
+assert(css.includes("url('../images/cover.jpg') center / cover no-repeat"), 'the cover fills the viewport');
+assert(css.includes('body::before') && css.includes('position: fixed'), 'the cover is a fixed layer');
+assert(!css.includes('background-attachment'), 'the cover does not use background-attachment');
 assert(html.includes('id="view-alerts"'), 'alerts screen exists');
 assert(html.includes('id="view-threats"'), 'threats screen exists');
 assert(html.includes('id="view-bots"'), 'bots screen exists');

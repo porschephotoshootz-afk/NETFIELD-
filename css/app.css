@@ -74,10 +74,7 @@ html { scroll-behavior: auto; }
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(900px 420px at 8% -10%, rgba(110, 30, 190, 0.22), transparent 60%),
-    radial-gradient(640px 360px at 100% 0%, rgba(120, 10, 30, 0.2), transparent 55%),
-    linear-gradient(180deg, #030610 0%, #091630 100%);
+  background: #030610;
   color: var(--txt);
   font-family: var(--sans);
   font-size: 17px;
@@ -88,6 +85,17 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3, 6, 16, 0.68), rgba(3, 6, 16, 0.76)),
+    url('../images/cover.jpg') center / cover no-repeat;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
   background-image:
     radial-gradient(1px 1px at 12px 18px, rgba(230, 240, 255, 0.75), transparent),
@@ -125,7 +133,7 @@ h1, h2, h3, p { margin: 0; }
   top: 0;
   z-index: 20;
   padding: 10px 14px 8px;
-  background: rgba(6, 13, 24, 0.92);
+  background: rgba(6, 13, 24, 0.82);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border2);
 }
@@ -587,13 +595,6 @@ label.settings { display: block; margin-top: 12px; }
   letter-spacing: -0.03em;
   margin-bottom: 8px;
 }
-.cover {
-  width: 100%;
-  height: auto;
-  border-radius: 18px;
-  border: 1px solid rgba(160, 190, 225, 0.45);
-  margin-bottom: 14px;
-}
 .hub {
   display: grid;
   gap: 10px;
@@ -610,6 +611,7 @@ label.settings { display: block; margin-top: 12px; }
   border-radius: 16px;
   border: 1px solid var(--border);
   background: rgba(12, 22, 40, 0.88);
+  backdrop-filter: blur(12px);
 }
 .hub-card strong { font-size: 18px; }
 .hub-card span { color: var(--txt2); font-size: 16px; }
@@ -639,7 +641,8 @@ label.settings { display: block; margin-top: 12px; }
 .alert-card, .list-card {
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: rgba(8, 16, 32, 0.92);
+  background: rgba(8, 16, 32, 0.9);
+  backdrop-filter: blur(12px);
   padding: 14px;
   margin: 10px 0;
 }
@@ -679,7 +682,8 @@ label.settings { display: block; margin-top: 12px; }
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(3, 6, 16, 0.94);
+  background: rgba(3, 6, 16, 0.9);
+  backdrop-filter: blur(16px);
   border-top: 1px solid var(--border2);
 }
 .nav-item {

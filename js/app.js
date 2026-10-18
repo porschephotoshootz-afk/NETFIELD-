@@ -17,7 +17,7 @@ import {
   clearWalletKeys,
   detectChainInput,
   explorerLinks,
-  flagAccount,
+  flagsAfterLookup,
   loadWalletKeys,
   readEtherscan,
   readPublicChain,
@@ -622,6 +622,8 @@ async function checkWallet() {
     if (live.historyNote) summary.append(el('p', { class: 'meta-line', text: live.historyNote }));
   } else if (live.error) {
     summary.append(el('p', { class: 'note', text: live.error }));
+    result.replaceChildren(summary);
+    return;
   }
   let approvals = [];
   let counterparties = [];
@@ -641,11 +643,10 @@ async function checkWallet() {
       counterparties = extra.counterparties || [];
     } else if (extra.error) summary.append(el('p', { class: 'note', text: extra.error }));
   }
-  const flags = flagAccount({
+  const flags = flagsAfterLookup(live, {
     address: detected.value,
     chain: detected.chain,
     catalog,
-    txCount: live.ok ? live.txCount : null,
     approvals,
     counterparties,
   });

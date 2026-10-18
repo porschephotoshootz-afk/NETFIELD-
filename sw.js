@@ -1,4 +1,4 @@
-const CACHE = 'starswarm-toolkit-v6';
+const CACHE = 'starswarm-toolkit-v7';
 
 const ASSETS = [
   './',

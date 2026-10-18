@@ -23,7 +23,7 @@ const CSP = [
   "style-src 'self'",
   "font-src 'self'",
   "img-src 'self' data:",
-  "connect-src 'self' https://toolkit-signup.starswarm.workers.dev https://api.anthropic.com https://api.openai.com https://challenges.cloudflare.com https://api.mainnet-beta.solana.com https://cloudflare-eth.com https://ethereum-rpc.publicnode.com https://api.etherscan.io https://pro-api.solscan.io",
+  "connect-src 'self' https://toolkit-signup.starswarm.workers.dev https://api.anthropic.com https://api.openai.com https://challenges.cloudflare.com https://solana-rpc.publicnode.com https://public.rpc.solanavibestation.com https://solana.api.pocket.network https://api.mainnet-beta.solana.com https://cloudflare-eth.com https://ethereum-rpc.publicnode.com https://api.etherscan.io https://pro-api.solscan.io",
   'frame-src https://challenges.cloudflare.com',
   "manifest-src 'self'",
   "worker-src 'self'",
