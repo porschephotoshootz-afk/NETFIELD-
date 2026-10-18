@@ -379,6 +379,16 @@ assert(html.includes('<title>StarSwarm Security Agentic Toolkit</title>'), 'page
 assert(html.includes('content="StarSwarm"'), 'home screen title is the short name');
 assert(html.includes('property="og:title" content="StarSwarm Security Agentic Toolkit"'), 'open graph title');
 assert(html.includes('name="twitter:title" content="StarSwarm Security Agentic Toolkit"'), 'twitter title');
+const pages = 'https://porschephotoshootz-afk.github.io/StarSwarm-Agentic-Security-Toolkit/';
+assert(html.includes(`property="og:url" content="${pages}"`), 'open graph url is absolute');
+assert(html.includes(`property="og:image" content="${pages}screenshots/og.png"`), 'open graph image is absolute');
+assert(html.includes(`name="twitter:image" content="${pages}screenshots/og.png"`), 'twitter image is absolute');
+assert(readme.includes(pages), 'readme uses the new pages url');
+const shipped = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js', 'package.json'];
+for (const file of shipped) {
+  const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+  assert(!text.includes('NETFIELD-'), `${file} has no old Pages path`);
+}
 
 if (failed) {
   console.error(`\n${passed} passed, ${failed} failed`);
