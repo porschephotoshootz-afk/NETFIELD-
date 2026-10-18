@@ -1,7 +1,7 @@
 {
   "name": "NetField Pocket Swarm",
   "short_name": "NetField",
-  "description": "Pocket swarm of specialist bots for instant offline IT and network analysis.",
+  "description": "Offline rule engine for Cisco output and network symptoms. AI analysis is optional and uses your own key.",
   "start_url": "./",
   "scope": "./",
   "id": "./",

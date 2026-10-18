@@ -6,6 +6,7 @@ import {
   runSwarm,
   wildcardToPrefix,
 } from '../js/analyzers.js';
+import { redactSecrets } from '../js/deep.js';
 import { SAMPLES } from '../js/samples.js';
 
 let passed = 0;
@@ -176,6 +177,89 @@ const vlanOnRadio = runSwarm("users on VLAN 20 can't reach the internet", { devi
 assert(!findAction(vlanOnRadio, 'hyp-wireless'), 'a wireless device does not invent a wireless fault');
 assert(findAction(vlanOnRadio, 'hyp-default-route'), 'a reachability symptom still hypothesizes a route');
 
+const dnsRankText = 'I can ping 8.8.8.8 but cannot open google.com';
+const dnsRank = runSwarm(dnsRankText);
+assert(dnsRank.summary.actions[0].id === 'dns-lookup-failed', `dns ranks first (${ids(dnsRank)})`);
+assert(!findAction(dnsRank, 'hyp-default-route'), 'a working IP ping is not a missing default route');
+assert(/DNS/i.test(dnsRank.summary.headline), `dns headline (${dnsRank.summary.headline})`);
+for (const line of dnsRank.summary.actions[0].evidence) {
+  assert(dnsRankText.includes(line), 'dns evidence is the symptom line');
+}
+
+const ospfAdjText = 'neighbor down, dead timer expired';
+const ospfAdj = runSwarm(ospfAdjText);
+assert(ospfAdj.summary.actions[0].id === 'ospf-adjacency', `ospf adjacency ranks first (${ids(ospfAdj)})`);
+assert(/hello\/dead timer/i.test(ospfAdj.summary.actions[0].fix), 'ospf fix names the hello and dead timers');
+assert(/area/i.test(ospfAdj.summary.actions[0].fix), 'ospf fix names the area');
+assert(/\bMTU\b/.test(ospfAdj.summary.actions[0].fix), 'ospf fix names MTU');
+assert(/authentication/i.test(ospfAdj.summary.actions[0].fix), 'ospf fix names authentication');
+assert(/network type/i.test(ospfAdj.summary.actions[0].fix), 'ospf fix names network type');
+assert(ospfAdjText.includes(ospfAdj.summary.actions[0].evidence[0]), 'ospf evidence is the symptom line');
+
+const dnsProseText = 'DNS not resolving, nslookup times out';
+const dnsProse = runSwarm(dnsProseText);
+assert(dnsProse.summary.actions[0].id === 'dns-lookup-failed', `dns prose ranks first (${ids(dnsProse)})`);
+assert(dnsProseText.includes(dnsProse.summary.actions[0].evidence[0]), 'dns prose evidence');
+
+const apipaText = 'clients getting 169.254 addresses';
+const apipaProse = runSwarm(apipaText);
+assert(apipaProse.summary.actions[0].id === 'dhcp-apipa', `apipa prose ranks first (${ids(apipaProse)})`);
+assert(/DHCP server/i.test(apipaProse.summary.actions[0].fix), 'apipa fix names the DHCP server');
+assert(/scope/i.test(apipaProse.summary.actions[0].fix), 'apipa fix names the scope');
+assert(/helper-address/i.test(apipaProse.summary.actions[0].fix), 'apipa fix names the relay');
+assert(/VLAN/i.test(apipaProse.summary.actions[0].fix), 'apipa fix names the VLAN');
+assert(apipaText.includes(apipaProse.summary.actions[0].evidence[0]), 'apipa evidence');
+
+const routeNotDns = runSwarm('I can ping the gateway 192.168.1.1 but I cannot ping 8.8.8.8');
+assert(routeNotDns.summary.actions[0].id === 'hyp-default-route', `numeric failure is a route (${ids(routeNotDns)})`);
+assert(routeNotDns.summary.actions[0].id !== 'dns-lookup-failed', 'a failed IP ping is not ranked as DNS');
+
+const exstartProse = runSwarm('OSPF neighbor stuck in EXSTART');
+assert(exstartProse.summary.actions[0].id === 'ospf-adjacency', `exstart prose (${ids(exstartProse)})`);
+assert(/\bMTU\b/.test(exstartProse.summary.actions[0].fix), 'exstart fix names MTU');
+
+const exhausted = runSwarm('The DHCP scope is exhausted and clients are getting 169.254.10.20');
+assert(exhausted.summary.actions[0].id === 'dhcp-apipa', `exhausted scope (${ids(exhausted)})`);
+assert(exhausted.summary.actions[0].title.includes('169.254.10.20'), 'apipa title keeps the address');
+
+const errdis = runSwarm('Gi1/0/1 is err-disabled by bpduguard');
+assert(errdis.summary.actions[0].id === 'l12-err-disabled', `err-disable prose (${ids(errdis)})`);
+
+const secretPaste = [
+  'enable secret cisco',
+  'enable password 7 0822455D0A16',
+  'username admin privilege 15 secret 9 $9$hashvalue',
+  'username bob password 0 bobpass',
+  ' password cisco',
+  'snmp-server community public RO',
+  'snmp-server community private RW',
+  'crypto isakmp key cisco123 address 10.0.0.1',
+  ' pre-shared-key 0 letmein',
+  ' ip ospf authentication-key s3cret',
+  ' key-string abcdef',
+  'no service password-encryption',
+  'interface GigabitEthernet0/0',
+  ' ip address 10.0.0.1 255.255.255.0',
+].join('\n');
+const redacted = redactSecrets(secretPaste);
+assert(redacted.includes('enable secret [redacted]'), 'enable secret redacted');
+assert(redacted.includes('enable password 7 [redacted]'), 'enable password redacted');
+assert(redacted.includes('username admin privilege 15 secret 9 [redacted]'), 'username secret redacted');
+assert(redacted.includes('username bob password 0 [redacted]'), 'username password redacted');
+assert(redacted.includes(' password [redacted]'), 'line password redacted');
+assert(redacted.includes('snmp-server community [redacted] RO'), 'snmp read community redacted');
+assert(redacted.includes('snmp-server community [redacted] RW'), 'snmp write community redacted');
+assert(redacted.includes('crypto isakmp key [redacted] address 10.0.0.1'), 'isakmp key redacted');
+assert(redacted.includes(' pre-shared-key 0 [redacted]'), 'pre-shared-key redacted');
+assert(redacted.includes(' ip ospf authentication-key [redacted]'), 'ospf key redacted');
+assert(redacted.includes(' key-string [redacted]'), 'key-string redacted');
+assert(redacted.includes('no service password-encryption'), 'encryption command stays');
+assert(redacted.includes(' ip address 10.0.0.1 255.255.255.0'), 'interface address stays');
+for (const leak of ['cisco', '0822455D0A16', 'bobpass', 'public', 'private', 'cisco123', 'letmein', 's3cret', 'abcdef', '$9$hashvalue']) {
+  assert(!redacted.includes(leak), `redacted value stayed in the paste: ${leak}`);
+}
+assert(redactSecrets(redacted) === redacted, 'redaction can run twice');
+
 const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
 assert(manifest.display === 'standalone', 'manifest is standalone');
 assert(manifest.icons.some((icon) => icon.sizes === '192x192'), 'manifest 192 icon');
@@ -200,6 +284,15 @@ assert(html.includes('TODO'), 'pro waitlist is marked TODO');
 assert(html.includes('<!-- TODO:'), 'TODO stays in a developer comment');
 assert(!/>\s*TODO:/.test(html), 'TODO is not visible text');
 assert(html.includes("Pro isn't open yet. Nothing is collected."), 'pro note is user-facing');
+assert(html.includes('offline rule engine'), 'free tier is described as a rule engine');
+assert(html.includes('id="privacy-note"'), 'privacy note is in the app');
+assert(html.includes('The ranked report stays on this device'), 'privacy note says the report stays local');
+assert(html.includes('property="og:title"') && html.includes('property="og:image"'), 'open graph tags');
+assert(html.includes('name="twitter:card"') && html.includes('summary_large_image'), 'twitter card');
+assert(!html.includes('The swarm reads'), 'the free check is not described as a swarm');
+assert(!html.includes('specialist bots'), 'the free check is not described as bots');
+assert(/offline rule engine/i.test(manifest.description), 'manifest describes a rule engine');
+assert(!/swarm of specialist bots/i.test(manifest.description), 'manifest does not claim a bot swarm');
 assert(!html.includes('fonts.googleapis.com'), 'fonts are self-hosted');
 assert(html.includes('rel="preload" href="fonts/outfit-latin.woff2"'), 'outfit is preloaded');
 assert(html.includes('rel="preload" href="fonts/jetbrains-mono-latin.woff2"'), 'jetbrains mono is preloaded');
@@ -228,6 +321,12 @@ assert(!appJs.includes('Waitlist is not connected'), 'old waitlist toast is gone
 assert(appJs.includes('aria-expanded'), 'ref cards expose aria-expanded');
 assert(appJs.includes('ArrowLeft') && appJs.includes("tabindex: selected ? '0' : '-1'"), 'device radios rove with arrow keys');
 assert(appJs.includes('deep-text'), 'deep analysis uses the pre-wrap class');
+assert(appJs.includes('redactSecrets'), 'the AI step redacts the paste');
+assert(appJs.includes('Send redacted paste'), 'the AI step warns before sending');
+assert(appJs.includes('The ranked report stays on this device'), 'the AI warning says the report stays local');
+assert(!appJs.includes('Swarm is reading'), 'status does not call the free check a swarm');
+const deepJs = fs.readFileSync(new URL('../js/deep.js', import.meta.url), 'utf8');
+assert(deepJs.includes('buildPrompt(redactSecrets(text)'), 'the provider payload is redacted');
 const settingsAt = appJs.indexOf('#settings-form');
 assert(appJs.slice(settingsAt, settingsAt + 180).includes('preventDefault'), 'enter in settings does not close the dialog');
 
@@ -255,7 +354,9 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes('netfield-pocket-swarm-v2'), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'netfield-pocket-swarm-v3'"), 'service worker cache was bumped');
+const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
+assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
 assert(worker.includes('fonts/outfit-latin.woff2') && worker.includes('fonts/jetbrains-mono-latin.woff2'), 'service worker precaches the fonts');
 assert(!worker.includes('netfield-pocket-swarm-v1'), 'old cache name is gone');
 

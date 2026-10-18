@@ -1,7 +1,7 @@
 import { SPECIALISTS, runSwarm } from './analyzers.js';
 import { SAMPLES } from './samples.js';
 import { CS_DATA, REF_DATA, SCENARIOS } from './study.js';
-import { clearKey, deepAnalyze, hasKey, loadKey, saveKey } from './deep.js';
+import { clearKey, deepAnalyze, hasKey, loadKey, redactSecrets, saveKey } from './deep.js';
 
 const REVEAL_MS = 420;
 const DEVICES = [
@@ -187,7 +187,7 @@ function botCard(spec, reportData, statusLabel) {
 function renderScanning() {
   const line = el('div', { class: 'coord-line', id: 'coord-line' }, [
     el('strong', { text: 'Coordinator' }),
-    el('span', { text: 'Listening to the swarm…' }),
+    el('span', { text: 'Checking the rules…' }),
   ]);
   const grid = el('div', { class: 'bot-grid' });
   for (const spec of SPECIALISTS) {
@@ -237,7 +237,7 @@ function begin(text, sample, { scroll = false } = {}) {
   const typedAtStart = paste.value;
   report.hidden = true;
   document.documentElement.dataset.swarm = 'running';
-  setStatus('Swarm is reading…');
+  setStatus('Reading the paste…');
   renderScanning();
   if (scroll) board.scrollIntoView({ block: 'start' });
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -329,32 +329,49 @@ function renderReport(result, sample) {
   }
 
   const deepRow = el('div', { class: 'deep-row' });
-  const deepBtn = el('button', { type: 'button', class: 'deep-btn', text: 'Deep analysis with your key' });
+  const deepBtn = el('button', { type: 'button', class: 'deep-btn', text: 'Optional AI analysis with your key' });
   const deepOut = el('div', { class: 'deep-box' });
   deepBtn.addEventListener('click', () => runDeep(deepBtn, deepOut));
   deepRow.append(deepBtn);
   root.append(
     deepRow,
-    el('p', { class: 'note', text: 'Optional. This sends the paste to your provider. The ranked report above does not.' }),
+    el('p', { class: 'note', text: 'Optional. AI analysis sends the paste to your provider. The ranked report stays on this device.' }),
     deepOut,
   );
   report.replaceChildren(root);
 }
 
+function warnBeforeAi(slot, redacted, changed) {
+  slot.replaceChildren(
+    el('p', { class: 'note', text: 'This sends the paste to your provider. The ranked report stays on this device.' }),
+    el('p', { class: 'note', text: changed
+      ? 'Lines with a password, secret, SNMP community, key, or pre-shared-key are replaced with [redacted].'
+      : 'No password, secret, or key lines were found. The paste is still sent only to your provider.' }),
+  );
+  const go = el('button', { type: 'button', class: 'deep-btn', text: 'Send redacted paste' });
+  go.addEventListener('click', () => sendDeep(go, slot, redacted));
+  slot.append(go);
+}
+
 async function runDeep(button, slot) {
   if (!hasKey()) {
-    showToast('Add a key in Settings. The free swarm does not need one.');
+    showToast('Add a key in Settings. The ranked report does not need one.');
     settings.showModal();
     return;
   }
+  const redacted = redactSecrets(paste.value);
+  warnBeforeAi(slot, redacted, redacted !== paste.value);
+}
+
+async function sendDeep(button, slot, redacted) {
   const saved = loadKey();
   button.disabled = true;
   slot.replaceChildren(el('p', { text: 'Asking your provider…' }));
   try {
-    const text = await deepAnalyze(saved, { text: paste.value, summary: lastResult?.summary });
-    slot.replaceChildren(el('h3', { text: 'Deep analysis' }), el('p', { class: 'deep-text', text }));
+    const text = await deepAnalyze(saved, { text: redacted, summary: lastResult?.summary });
+    slot.replaceChildren(el('h3', { text: 'AI analysis' }), el('p', { class: 'deep-text', text }));
   } catch (error) {
-    slot.replaceChildren(el('p', { text: error.message || 'Deep analysis failed.' }));
+    slot.replaceChildren(el('p', { text: error.message || 'AI analysis failed.' }));
   } finally {
     button.disabled = false;
   }
@@ -480,7 +497,7 @@ function persistKey() {
   const existing = loadKey();
   const key = typed || existing?.key;
   if (!key) {
-    showToast('Paste a key first. The swarm still runs without one.');
+      showToast('Paste a key first. The ranked report still runs without one.');
     return;
   }
   saveKey({ provider, model, key });

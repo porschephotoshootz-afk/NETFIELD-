@@ -258,6 +258,13 @@ function nextOrder(ctx) {
   return ctx.order;
 }
 
+function namesFailWhileIpWorks(text) {
+  const ipWorks = /\b(?:can|could)\s+ping\s+\d+\.\d+\.\d+\.\d+\b/i.test(text);
+  const nameFails = /\b(?:cannot|can't|can not)\s+(?:open|browse|load)\b/i.test(text)
+    || /\b(?:dns|nslookup|not resolv)/i.test(text);
+  return ipWorks && nameFails;
+}
+
 function detectSymptoms(text) {
   const vlans = new Set();
   for (const match of text.matchAll(/\bvlan\s*0*(\d{1,4})\b/gi)) {
@@ -271,6 +278,7 @@ function detectSymptoms(text) {
     slow: /\bslow\b|\bcrc\b|collision|\bduplex\b/i.test(text),
     wireless: /\bwi-?fi\b|\bssid\b|\bwireless\b|\brssi\b|\bcapwap\b|\bdot11\b/i.test(text),
     security: /\btelnet\b|\bpassword\b|\bsnmp\b|\bssh\b|\binsecure\b/i.test(text),
+    ipWorksNamesFail: namesFailWhileIpWorks(text),
     vlans: [...vlans],
   };
 }
@@ -603,7 +611,7 @@ function parse24Aps(text) {
 function hypotheses(id, ctx) {
   const evidence = ctx.symptomLine ? [ctx.symptomLine] : [];
   const vlan = ctx.symptoms.vlans[0];
-  if (id === 'routing' && (ctx.symptoms.internet || ctx.symptoms.reach)) {
+  if (id === 'routing' && (ctx.symptoms.internet || ctx.symptoms.reach) && !ctx.symptoms.ipWorksNamesFail) {
     return [finding('routing', {
       id: 'hyp-default-route',
       severity: 'medium',
@@ -854,6 +862,21 @@ function analyzeLayer12(ctx) {
     }));
   }
 
+  for (const line of ctx.lines) {
+    if (!/err-disabled/i.test(line)) continue;
+    if (out.some((item) => item.id === 'l12-err-disabled' && item.evidence.includes(line))) continue;
+    const iface = line.match(/\b((?:GigabitEthernet|FastEthernet|TenGigabitEthernet|Gi|Fa|Te|Eth)\S*)/i);
+    out.push(finding('layer12', {
+      id: 'l12-err-disabled',
+      severity: 'critical',
+      order: nextOrder(ctx),
+      title: iface ? `${iface[1]} is err-disabled` : 'A port is err-disabled',
+      fix: 'Err-disable usually means BPDU Guard, port security, or a loop. Find the reason, fix the cause, then shut and no shut the port.',
+      evidence: [line],
+      commands: ['show errdisable recovery', iface ? `interface ${iface[1]}` : 'show interfaces status', ' shutdown', ' no shutdown'],
+    }));
+  }
+
   return out;
 }
 
@@ -976,6 +999,24 @@ function analyzeRouting(ctx) {
     }
   }
 
+  const adjLines = ctx.lines.filter((line) => (
+    /dead timer expired/i.test(line)
+    || /neighbor down/i.test(line)
+    || /stuck in (?:exstart|init|2-way|exchange|loading)/i.test(line)
+    || (/hello(?:\s*\/\s*dead)? timers?/i.test(line) && /ospf|neighbor/i.test(line))
+  ));
+  if (adjLines.length && !out.some((item) => item.id.startsWith('ospf-'))) {
+    out.push(finding('routing', {
+      id: 'ospf-adjacency',
+      severity: 'high',
+      order: nextOrder(ctx),
+      title: 'OSPF adjacency is down',
+      fix: 'A neighbor that drops on a dead timer, or never leaves EXSTART, is usually a hello/dead timer mismatch, a different area, an MTU mismatch, authentication, or a network type mismatch. Compare show ip ospf interface on both ends before you change the route.',
+      evidence: unique(adjLines).slice(0, 3),
+      commands: ['show ip ospf neighbor', 'show ip ospf interface', 'show ip ospf interface brief'],
+    }));
+  }
+
   const sia = ctx.lines.find((line) => /stuck in active|\bSIA\b/.test(line));
   if (sia) {
     out.push(finding('routing', {
@@ -1057,6 +1098,21 @@ function analyzeIp(ctx) {
 function prefixToMask(prefix) {
   if (prefix === 0) return '0.0.0.0';
   return intToIp((0xffffffff << (32 - prefix)) >>> 0);
+}
+
+function isApipaLine(line) {
+  if (/\bapipa\b/i.test(line)) return true;
+  const host = line.match(/\b(169\.254\.\d+\.\d+)\b/);
+  if (host && host[1] !== '169.254.0.0') return true;
+  return /\b169\.254\b/i.test(line) && /address|client|getting|lease|dhcp/i.test(line);
+}
+
+function isDnsLine(line) {
+  return /could not find host|can't find host|cannot find host|Non-existent domain|Temporary failure in name resolution|server can't find/i.test(line)
+    || /\bdns\b[^.\n]{0,48}\b(?:not resolv|fail|timeout|timed out|times out)/i.test(line)
+    || /\bnslookup\b/i.test(line)
+    || /\b(?:cannot|can't|can not)\s+resolve\b/i.test(line)
+    || /\bname resolution (?:failed|timed out|times out)/i.test(line);
 }
 
 function analyzeServices(ctx) {
@@ -1165,34 +1221,40 @@ function analyzeServices(ctx) {
     }
   }
 
-  for (const line of ctx.lines) {
-    const apipa = line.match(/\b(169\.254\.\d+\.\d+)\b/);
-    if (!apipa || apipa[1] === '169.254.0.0') continue;
+  const apipaLines = ctx.lines.filter(isApipaLine);
+  if (apipaLines.length) {
+    const host = apipaLines.join('\n').match(/\b(169\.254\.\d+\.\d+)\b/);
+    const specific = host && host[1] !== '169.254.0.0' ? ` ${host[1]}` : '';
     out.push(finding('services', {
       id: 'dhcp-apipa',
       severity: 'high',
       order: nextOrder(ctx),
-      title: `Host fell back to APIPA ${apipa[1]}`,
-      fix: '169.254.x.x means DHCP never completed. Check the VLAN, the pool, and ip helper-address if the server is on another subnet.',
-      evidence: [line],
+      title: `Clients fell back to APIPA${specific}`,
+      fix: '169.254 means the client never got a DHCP lease. Check that the DHCP server is up, the scope is not exhausted, the client VLAN can reach that server, and ip helper-address is set when the server is on another subnet.',
+      evidence: apipaLines.slice(0, 2),
       commands: ['show ip dhcp binding', 'show ip dhcp pool', 'ip helper-address <dhcp-server>'],
     }));
-    break;
   }
 
-  const dnsLines = ctx.lines.filter((line) => /could not find host|can't find host|cannot find host|Non-existent domain|Temporary failure in name resolution|server can't find/i.test(line));
-  if (dnsLines.length) {
+  const dnsLines = ctx.lines.filter(isDnsLine);
+  if (dnsLines.length || ctx.symptoms.ipWorksNamesFail) {
     const ipFails = ctx.lines.some((line) => /100%\s*(packet )?loss|Lost = \d+ \(100% loss\)|Request timed out/i.test(line));
+    const namesOnly = ctx.symptoms.ipWorksNamesFail && !ipFails;
+    const evidence = dnsLines.length ? dnsLines.slice(0, 2) : [ctx.symptomLine].filter(Boolean);
     out.push(finding('services', {
       id: 'dns-lookup-failed',
-      severity: ipFails ? 'medium' : 'high',
+      severity: namesOnly || !ipFails ? 'high' : 'medium',
       order: nextOrder(ctx),
-      title: ipFails ? 'Names fail, and numeric pings are failing too' : 'DNS lookup failed',
-      fix: ipFails
-        ? 'Fix reachability first. A name lookup will keep failing while the host cannot reach a DNS server.'
-        : 'The host can use addresses but not names. Set a reachable DNS server on the client or in the DHCP pool.',
-      evidence: dnsLines.slice(0, 2),
-      commands: ['ping 8.8.8.8', 'ping google.com', 'show ip dhcp pool'],
+      title: namesOnly
+        ? 'DNS is failing even though the IP address answers'
+        : (ipFails ? 'Names fail, and numeric pings are failing too' : 'DNS lookup failed'),
+      fix: namesOnly
+        ? 'A ping to a numeric address works, so a missing default route is not the first problem. Set a DNS server the host can reach, on the client or in the DHCP pool, then try the name again.'
+        : (ipFails
+          ? 'Fix reachability first. A name lookup will keep failing while the host cannot reach a DNS server.'
+          : 'The host can use addresses but not names. Set a reachable DNS server on the client or in the DHCP pool.'),
+      evidence,
+      commands: ['ping 8.8.8.8', 'nslookup google.com', 'show ip dhcp pool'],
     }));
   }
 
@@ -1533,7 +1595,7 @@ function score(actions, ctx) {
 }
 
 function buildNarrative(actions, provisional, ctx) {
-  if (!ctx.text.trim()) return 'Paste Cisco show output, ping or ipconfig text, an error, or a one-line symptom. The swarm reads it on this phone.';
+  if (!ctx.text.trim()) return 'Paste Cisco show output, ping or ipconfig text, an error, or a one-line symptom. The rule engine reads it on this device.';
   if (!actions.length) return 'Nothing in this paste rose to a fault. If users are still down, run a suggested show command and paste the output back — analysis starts on its own.';
   const top = actions.slice(0, 3);
   const rest = top.slice(1).map((item) => item.title).join('; ');

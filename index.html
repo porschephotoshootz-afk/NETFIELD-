@@ -4,7 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#060d18">
-<meta name="description" content="NetField Pocket Swarm analyzes Cisco output and network symptoms on your phone. No account and no API key.">
+<meta name="description" content="NetField Pocket Swarm is an offline rule engine. It ranks Cisco output and symptoms on your device. AI analysis is optional and uses your own key.">
+<meta property="og:title" content="NetField Pocket Swarm">
+<meta property="og:description" content="An offline rule engine for Cisco output and network symptoms. It runs on your device. AI analysis is optional and uses your own key.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://porschephotoshootz-afk.github.io/NETFIELD-/">
+<meta property="og:image" content="https://porschephotoshootz-afk.github.io/NETFIELD-/screenshots/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NetField Pocket Swarm">
+<meta name="twitter:description" content="An offline rule engine for Cisco output and network symptoms. It runs on your device. AI analysis is optional and uses your own key.">
+<meta name="twitter:image" content="https://porschephotoshootz-afk.github.io/NETFIELD-/screenshots/og.png">
 <meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -36,7 +47,7 @@
       </div>
     </div>
     <nav class="tabs" aria-label="Sections">
-      <button type="button" class="tab active" data-view="swarm" aria-current="page">Swarm</button>
+      <button type="button" class="tab active" data-view="swarm" aria-current="page">Analyze</button>
       <button type="button" class="tab" data-view="study">Study</button>
       <button type="button" class="tab" data-view="pro">Pro</button>
     </nav>
@@ -46,7 +57,8 @@
     <section id="view-swarm" class="view">
       <div class="swarm-layout">
         <div class="swarm-in">
-          <p class="lede">Paste show output or a symptom. The swarm reads it on this phone and ranks what to fix first.</p>
+          <p class="lede">Paste show output or a symptom. An offline rule engine on this device ranks what to fix first. AI analysis is optional and uses your own key.</p>
+          <p class="note" id="privacy-note">The ranked report stays on this device. Optional AI analysis sends the paste to your own provider.</p>
           <div class="device-row" id="devices" role="radiogroup" aria-orientation="horizontal" aria-label="Device type"></div>
           <label class="field-label" for="paste">What are you looking at?</label>
           <textarea id="paste" spellcheck="false" placeholder="Paste Cisco show output, or a sentence like “users on VLAN 20 can't reach the internet”."></textarea>
@@ -65,7 +77,7 @@
     </section>
 
     <section id="view-study" class="view" hidden>
-      <p class="lede">CCNA field cards from the pocket tool. Protocols, checklists, and numbers. They stay on the phone with the swarm.</p>
+      <p class="lede">CCNA field cards. Protocols, checklists, and numbers. They stay on this device.</p>
       <div class="study-tabs" role="tablist" aria-label="Study topics">
         <button type="button" class="study-tab active" id="study-tab-ref" role="tab" aria-selected="true" aria-controls="study-ref" data-study="ref">Quick ref</button>
         <button type="button" class="study-tab" id="study-tab-lists" role="tab" aria-selected="false" aria-controls="study-lists" data-study="lists" tabindex="-1">Checklists</button>
@@ -79,7 +91,7 @@
     <section id="view-pro" class="view" hidden>
       <article class="pro-card">
         <h2>Pro</h2>
-        <p>The swarm is free. It runs in the browser, with no account and no server.</p>
+        <p>The free check is an offline rule engine. It runs on this device, with no account and no server. AI analysis is optional and uses your own key.</p>
         <p>Pro would be the hosted add-on, when there is one:</p>
         <ul>
           <li>Saved history of pastes and reports</li>
@@ -97,7 +109,7 @@
 <dialog id="settings">
   <form method="dialog" id="settings-form">
     <h2>Settings</h2>
-    <p class="lede">The swarm never needs a key. A key is optional, stays in this browser, and is sent only to the provider below when you tap Deep analysis.</p>
+    <p class="lede">The ranked report never needs a key. It is an offline rule engine on this device. A key is optional, stays in this browser, and is sent only to your provider when you choose AI analysis.</p>
     <label class="settings">Provider
       <select id="provider">
         <option value="anthropic">Anthropic</option>

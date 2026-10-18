@@ -47,11 +47,34 @@ export function hasKey() {
   return Boolean(loadKey());
 }
 
+const SECRET_LINE = [
+  /^(\s*enable\s+(?:secret|password)(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*username\s+\S+(?:\s+privilege\s+\d+)?\s+(?:password|secret)(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*password(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*secret(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*snmp-server\s+community\s+)\S+(.*)$/i,
+  /^(\s*(?:pre-shared-key|key-string|authentication-key)(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*crypto\s+isakmp\s+key(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*(?:tacacs-server|radius-server|radius\s+server)\s+key(?:\s+\d)?\s+)\S+(.*)$/i,
+  /^(\s*ip\s+ospf\s+(?:authentication-key|message-digest-key\s+\d+\s+md5)\s+)\S+(.*)$/i,
+  /^(\s*(?:ip\s+ftp|ip\s+http\s+client|ppp\s+\S+)\s+password\s+)\S+(.*)$/i,
+  /^(\s*wpa-psk\s+(?:ascii|hex)\s+)\S+(.*)$/i,
+];
+
+export function redactSecrets(text) {
+  return String(text ?? '').split('\n').map((line) => {
+    for (const rule of SECRET_LINE) {
+      if (rule.test(line)) return line.replace(rule, '$1[redacted]$2');
+    }
+    return line;
+  }).join('\n');
+}
+
 export async function deepAnalyze(settings, { text, summary }) {
   const provider = settings.provider === 'openai' ? 'openai' : 'anthropic';
   const key = settings.key;
   const model = settings.model || (provider === 'openai' ? 'gpt-4o-mini' : 'claude-sonnet-4-5');
-  const prompt = buildPrompt(text, summary);
+  const prompt = buildPrompt(redactSecrets(text), summary);
   let response;
   try {
     response = await fetch(ENDPOINTS[provider], {
@@ -121,7 +144,7 @@ function buildPrompt(text, summary) {
   )).join('\n');
   const paste = String(text || '').slice(0, 12000);
   return [
-    'Second-pass the on-device swarm. Agree or correct it. Give the first command to run and why.',
+    'Second-pass the on-device rule engine. Agree or correct it. Give the first command to run and why.',
     'Do not repeat the whole paste.',
     '',
     `Coordinator (${summary?.confidenceLabel || 'unknown'} confidence): ${summary?.headline || ''}`,
