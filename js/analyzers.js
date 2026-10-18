@@ -1598,7 +1598,7 @@ function buildNarrative(actions, provisional, ctx) {
   if (!ctx.text.trim()) return 'Paste Cisco show output, ping or ipconfig text, an error, or a one-line symptom. The rule engine reads it on this device.';
   if (!actions.length) return 'Nothing in this paste rose to a fault. If users are still down, run a suggested show command and paste the output back — analysis starts on its own.';
   const top = actions.slice(0, 3);
-  const rest = top.slice(1).map((item) => item.title).join('; ');
+  const rest = top.slice(1).map((item) => item.title).join('. ');
   const extra = rest ? ` Also: ${rest}.` : '';
   const note = provisional ? ' This is a hypothesis from the symptom alone. Paste show output before changing config.' : '';
   return `${top[0].title}. ${top[0].fix}${extra}${note}`;

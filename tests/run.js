@@ -108,6 +108,8 @@ assert(!findAction(vlan, 'sec-telnet'), 'vlan sample is not telnet');
 assert(vlan.summary.script.includes('ip route 0.0.0.0 0.0.0.0'), 'vlan script default route');
 assert(vlan.summary.script.includes('192.168.20.0'), 'vlan script permits guest subnet');
 assert(vlan.summary.script.includes('ip nat inside'), 'vlan script marks inside');
+assert(vlan.summary.narrative.includes('NAT ACL 1 skips 192.168.20.0/24. '), 'narrative joins findings with periods');
+assert(!vlan.summary.narrative.includes(';'), 'narrative has no semicolons');
 assert(vlan.summary.followups.some((item) => item.cmd.includes('show spanning-tree')), `vlan follow-up (${JSON.stringify(vlan.summary.followups)})`);
 
 const duplex = runSwarm(byId['duplex-mismatch'].text, { deviceType: 'switch' });
@@ -410,11 +412,13 @@ assert(html.includes('<title>StarSwarm Security Agentic Toolkit</title>'), 'page
 assert(html.includes('content="StarSwarm"'), 'home screen title is the short name');
 assert(html.includes('property="og:title" content="StarSwarm Security Agentic Toolkit"'), 'open graph title');
 assert(html.includes('name="twitter:title" content="StarSwarm Security Agentic Toolkit"'), 'twitter title');
-const pages = 'https://porschephotoshootz-afk.github.io/StarSwarm-Agentic-Security-Toolkit/';
-assert(html.includes(`property="og:url" content="${pages}"`), 'open graph url is absolute');
-assert(html.includes(`property="og:image" content="${pages}screenshots/og.png"`), 'open graph image is absolute');
-assert(html.includes(`name="twitter:image" content="${pages}screenshots/og.png"`), 'twitter image is absolute');
-assert(readme.includes(pages), 'readme uses the new pages url');
+const site = 'https://toolkit.starswarm.workers.dev/';
+assert(html.includes(`property="og:url" content="${site}"`), 'open graph url is absolute');
+assert(html.includes(`property="og:image" content="${site}screenshots/og.png"`), 'open graph image is absolute');
+assert(html.includes(`name="twitter:image" content="${site}screenshots/og.png"`), 'twitter image is absolute');
+assert(html.includes(`rel="canonical" href="${site}"`), 'canonical link uses the public host');
+assert(readme.includes(site), 'readme uses the public url');
+assert(!html.includes('github.io/StarSwarm-Agentic-Security-Toolkit'), 'share tags no longer point at the pages path');
 const shipped = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/config.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js', 'package.json', 'worker/signup/worker.js', 'worker/signup/wrangler.toml', 'worker/signup/README.md'];
 for (const file of shipped) {
   const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');

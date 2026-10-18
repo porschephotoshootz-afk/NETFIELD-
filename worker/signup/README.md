@@ -38,7 +38,7 @@ Nothing in this folder is deployed by the app change. The owner deploys it from 
 
 ## Endpoints
 
-`POST /api/signup` accepts JSON or form data with `email` and `company`. `company` is a honeypot. A filled honeypot returns 200 and stores nothing. The email is trimmed and lowercased. Sending the same email again returns 200 and keeps the original timestamp. Browsers must send `Origin: https://porschephotoshootz-afk.github.io`.
+`POST /api/signup` accepts JSON or form data with `email` and `company`. `company` is a honeypot. A filled honeypot returns 200 and stores nothing. The email is trimmed and lowercased. Sending the same email again returns 200 and keeps the original timestamp. Browsers must send `Origin: https://porschephotoshootz-afk.github.io` or `Origin: https://toolkit.starswarm.workers.dev`. Any other origin is rejected.
 
 `GET /api/export?format=csv` returns `email,timestamp` rows. It requires `Authorization: Bearer <EXPORT_TOKEN>`. There is no public list.
 

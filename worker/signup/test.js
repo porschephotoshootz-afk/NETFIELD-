@@ -173,6 +173,23 @@ async function testCors(assert) {
   assert(blocked.status === 403, 'a different origin is rejected');
   assert(blocked.headers.get('Access-Control-Allow-Origin') !== 'https://evil.example', 'a different origin is not reflected');
   assert(!kv.store.has('signup:cors@example.com'), 'a rejected origin stores nothing');
+
+  const toolkitOrigin = 'https://toolkit.starswarm.workers.dev';
+  const toolkitPreflight = await worker.fetch(new Request('https://toolkit-signup.starswarm.workers.dev/api/signup', {
+    method: 'OPTIONS',
+    headers: { Origin: toolkitOrigin },
+  }), env(kv));
+  assert(toolkitPreflight.status === 204, 'preflight from the toolkit workers.dev origin succeeds');
+  assert(toolkitPreflight.headers.get('Access-Control-Allow-Origin') === toolkitOrigin, 'preflight echoes the toolkit origin');
+  const toolkitPost = await post(kv, { email: 'toolkit-origin@example.com', company: '' }, {
+    headers: { Origin: toolkitOrigin, 'CF-Connecting-IP': '203.0.113.27' },
+  });
+  assert(toolkitPost.status === 200, 'a signup from the toolkit origin is accepted');
+  assert(kv.store.has('signup:toolkit-origin@example.com'), 'a toolkit origin signup is stored');
+  const lookalike = await post(kv, { email: 'lookalike@example.com', company: '' }, {
+    headers: { Origin: 'https://toolkit.starswarm.workers.dev.evil.example', 'CF-Connecting-IP': '203.0.113.28' },
+  });
+  assert(lookalike.status === 403, 'a lookalike origin is rejected');
 }
 
 async function testExport(assert) {

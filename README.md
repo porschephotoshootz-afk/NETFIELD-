@@ -6,4 +6,4 @@ StarSwarm Agentic Security ([@starswarm](https://x.com/starswarm)) publishes thi
 
 The free check is an offline rule engine. It runs in the browser on the device and ranks Cisco output and symptoms. AI analysis is optional and uses your own key. The free check does not run autonomous agents.
 
-The published site is [https://porschephotoshootz-afk.github.io/StarSwarm-Agentic-Security-Toolkit/](https://porschephotoshootz-afk.github.io/StarSwarm-Agentic-Security-Toolkit/).
+The published site is [https://toolkit.starswarm.workers.dev/](https://toolkit.starswarm.workers.dev/).

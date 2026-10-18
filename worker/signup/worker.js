@@ -3,7 +3,10 @@
  * Stores an email and a timestamp. Does not store an IP address.
  */
 
-const ALLOWED_ORIGIN = 'https://porschephotoshootz-afk.github.io';
+const ALLOWED_ORIGINS = new Set([
+  'https://porschephotoshootz-afk.github.io',
+  'https://toolkit.starswarm.workers.dev',
+]);
 const SIGNUP_SOURCE = 'toolkit-pro';
 const RATE_WINDOW_SEC = 600;
 
@@ -28,7 +31,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin');
-    if (origin && origin !== ALLOWED_ORIGIN) {
+    if (origin && !ALLOWED_ORIGINS.has(origin)) {
       return respond(request, 403, { ok: false, error: 'origin' });
     }
     if (request.method === 'OPTIONS') {
@@ -227,9 +230,10 @@ function csvField(value) {
 }
 
 function corsHeaders(request) {
-  if (request.headers.get('Origin') === ALLOWED_ORIGIN) {
+  const origin = request.headers.get('Origin');
+  if (ALLOWED_ORIGINS.has(origin)) {
     return {
-      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       Vary: 'Origin',
