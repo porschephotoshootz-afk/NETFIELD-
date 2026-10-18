@@ -4,10 +4,28 @@
   "description": "Pocket swarm of specialist bots for instant offline IT and network analysis.",
   "start_url": "./",
   "scope": "./",
+  "id": "./",
   "display": "standalone",
   "background_color": "#060d18",
   "theme_color": "#060d18",
   "lang": "en",
+  "categories": ["utilities", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshots/narrow.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "NetField on a phone"
+    },
+    {
+      "src": "screenshots/wide.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Coordinator report on a wide screen"
+    }
+  ],
   "icons": [
     {
       "src": "icons/icon-192.png",

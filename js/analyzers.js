@@ -675,7 +675,8 @@ function hypotheses(id, ctx) {
       commands: ['show running-config', 'show ip ssh'],
     })];
   }
-  if (id === 'wireless' && (ctx.symptoms.wireless || ctx.deviceType === 'wireless')) {
+  // A chosen device is not evidence. Wireless still needs wireless text.
+  if (id === 'wireless' && ctx.symptoms.wireless) {
     return [finding('wireless', {
       id: 'hyp-wireless',
       severity: 'medium',

@@ -1,4 +1,4 @@
-const CACHE = 'netfield-pocket-swarm-v1';
+const CACHE = 'netfield-pocket-swarm-v2';
 
 const ASSETS = [
   './',
@@ -10,6 +10,8 @@ const ASSETS = [
   './js/study.js',
   './js/app.js',
   './js/deep.js',
+  './fonts/outfit-latin.woff2',
+  './fonts/jetbrains-mono-latin.woff2',
   './icons/favicon-32.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

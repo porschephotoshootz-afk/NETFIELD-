@@ -51,23 +51,27 @@ function el(tag, attrs = {}, kids = []) {
 
 function showToast(message) {
   toast.textContent = message;
+  toast.setAttribute('aria-hidden', 'false');
   toast.classList.add('show');
   clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
+  showToast.timer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.setAttribute('aria-hidden', 'true');
+  }, 2400);
 }
 
-async function copyText(text) {
+async function copyText(text, message = 'Copied') {
   try {
     await navigator.clipboard.writeText(text);
-    showToast('Copied');
   } catch {
     const area = el('textarea', { text });
+    area.setAttribute('readonly', '');
     document.body.append(area);
     area.select();
     document.execCommand('copy');
     area.remove();
-    showToast('Copied');
   }
+  showToast(message);
 }
 
 function setStatus(message) {
@@ -76,26 +80,43 @@ function setStatus(message) {
   statusText.textContent = offline ? `Offline · ${message}` : message;
 }
 
+function selectDevice(id, { focus = false } = {}) {
+  const changed = deviceType !== id;
+  deviceType = id;
+  paintDevices();
+  if (focus) devices.querySelector('.device[aria-checked="true"]')?.focus();
+  if (changed && paste.value.trim().length >= 8) {
+    lastText = '';
+    begin(paste.value, lastSample);
+  }
+}
+
 function paintDevices() {
   devices.replaceChildren();
-  for (const [id, label] of DEVICES) {
+  DEVICES.forEach(([id, label], index) => {
+    const selected = id === deviceType;
     const button = el('button', {
       type: 'button',
       class: 'device',
       role: 'radio',
-      'aria-checked': id === deviceType ? 'true' : 'false',
+      'aria-checked': selected ? 'true' : 'false',
+      tabindex: selected ? '0' : '-1',
       text: label,
     });
-    button.addEventListener('click', () => {
-      deviceType = id;
-      paintDevices();
-      if (paste.value.trim().length >= 8) {
-        lastText = '';
-        begin(paste.value, lastSample);
-      }
+    button.addEventListener('click', () => selectDevice(id));
+    button.addEventListener('keydown', (event) => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      let next = index;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % DEVICES.length;
+      else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index + DEVICES.length - 1) % DEVICES.length;
+      else if (event.key === 'Home') next = 0;
+      else next = DEVICES.length - 1;
+      selectDevice(DEVICES[next][0], { focus: true });
     });
     devices.append(button);
-  }
+  });
 }
 
 function paintSamples() {
@@ -197,10 +218,10 @@ function loadSample(sample) {
   paintDevices();
   settingValue = false;
   lastText = '';
-  begin(sample.text, sample);
+  begin(sample.text, sample, { scroll: true });
 }
 
-function begin(text, sample) {
+function begin(text, sample, { scroll = false } = {}) {
   const trimmed = text.trim();
   if (trimmed.length < 8) {
     if (!trimmed) showIdle();
@@ -213,11 +234,12 @@ function begin(text, sample) {
   clearTimers();
   const result = runSwarm(trimmed, { deviceType });
   lastResult = result;
+  const typedAtStart = paste.value;
   report.hidden = true;
   document.documentElement.dataset.swarm = 'running';
   setStatus('Swarm is reading…');
   renderScanning();
-  board.scrollIntoView({ block: 'start' });
+  if (scroll) board.scrollIntoView({ block: 'start' });
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const step = reduce ? 0 : REVEAL_MS;
   result.reports.forEach((item, index) => {
@@ -236,7 +258,8 @@ function begin(text, sample) {
     document.documentElement.dataset.swarm = 'done';
     const n = result.summary.actions.length;
     setStatus(n ? `Coordinator ranked ${n} item${n === 1 ? '' : 's'}` : 'Coordinator found nothing definite');
-    report.scrollIntoView({ block: 'start' });
+    const stillTyping = document.activeElement === paste && paste.value !== typedAtStart;
+    if (scroll && !stillTyping) report.scrollIntoView({ block: 'start' });
   }, 180 + result.reports.length * step + (reduce ? 0 : 240));
 }
 
@@ -298,8 +321,7 @@ function renderReport(result, sample) {
       const button = el('button', { type: 'button', class: 'chip', text: chip.cmd });
       button.title = chip.why;
       button.addEventListener('click', () => {
-        copyText(chip.cmd);
-        showToast(`Copied ${chip.cmd}. Paste the output back.`);
+        copyText(chip.cmd, `Copied ${chip.cmd}. Paste the output back.`);
       });
       row.append(button);
     }
@@ -330,7 +352,7 @@ async function runDeep(button, slot) {
   slot.replaceChildren(el('p', { text: 'Asking your provider…' }));
   try {
     const text = await deepAnalyze(saved, { text: paste.value, summary: lastResult?.summary });
-    slot.replaceChildren(el('h3', { text: 'Deep analysis' }), el('p', { text }));
+    slot.replaceChildren(el('h3', { text: 'Deep analysis' }), el('p', { class: 'deep-text', text }));
   } catch (error) {
     slot.replaceChildren(el('p', { text: error.message || 'Deep analysis failed.' }));
   } finally {
@@ -355,16 +377,22 @@ function paintStudy() {
   const lists = document.querySelector('#study-lists');
   const cards = document.querySelector('#study-cards');
   ref.replaceChildren();
-  for (const item of REF_DATA) {
+  REF_DATA.forEach((item, index) => {
     const card = el('article', { class: 'ref-card' });
-    const head = el('button', { type: 'button', class: 'ref-head' }, [
+    const bodyId = `ref-body-${index}`;
+    const head = el('button', {
+      type: 'button',
+      class: 'ref-head',
+      'aria-expanded': 'false',
+      'aria-controls': bodyId,
+    }, [
       el('span', { text: item.icon, 'aria-hidden': 'true' }),
       el('span', {}, [
         el('strong', { text: item.title }),
         el('span', { class: 'bot-role', text: item.sub }),
       ]),
     ]);
-    const body = el('div', { class: 'ref-body' });
+    const body = el('div', { class: 'ref-body', id: bodyId });
     const tags = el('div', { class: 'tag-row' });
     for (const tag of item.tags) tags.append(el('span', { class: 'tag', text: tag.t }));
     body.append(tags);
@@ -378,10 +406,13 @@ function paintStudy() {
       copyText(item.cmd.trim());
     });
     body.append(copy, cmd);
-    head.addEventListener('click', () => card.classList.toggle('open'));
+    head.addEventListener('click', () => {
+      const open = card.classList.toggle('open');
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
     card.append(head, body);
     ref.append(card);
-  }
+  });
 
   lists.replaceChildren();
   for (const scenario of SCENARIOS) {
@@ -430,26 +461,64 @@ function paintKeyState() {
   if (saved.model) document.querySelector('#model').value = saved.model;
 }
 
+function showStudy(name) {
+  document.querySelectorAll('.study-tab').forEach((tab) => {
+    const on = tab.dataset.study === name;
+    tab.classList.toggle('active', on);
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    tab.tabIndex = on ? 0 : -1;
+  });
+  for (const id of ['ref', 'lists', 'cards']) {
+    document.querySelector(`#study-${id}`).hidden = id !== name;
+  }
+}
+
+function persistKey() {
+  const provider = document.querySelector('#provider').value;
+  const model = document.querySelector('#model').value;
+  const typed = document.querySelector('#api-key').value.trim();
+  const existing = loadKey();
+  const key = typed || existing?.key;
+  if (!key) {
+    showToast('Paste a key first. The swarm still runs without one.');
+    return;
+  }
+  saveKey({ provider, model, key });
+  document.querySelector('#api-key').value = '';
+  paintKeyState();
+  showToast('Key saved in this browser only');
+}
+
 function wire() {
   document.querySelectorAll('.tab').forEach((button) => {
     button.addEventListener('click', () => showView(button.dataset.view));
   });
-  document.querySelectorAll('.study-tab').forEach((button) => {
-    button.addEventListener('click', () => {
-      document.querySelectorAll('.study-tab').forEach((tab) => tab.classList.toggle('active', tab === button));
-      for (const name of ['ref', 'lists', 'cards']) {
-        document.querySelector(`#study-${name}`).hidden = button.dataset.study !== name;
-      }
+  const studyTabs = [...document.querySelectorAll('.study-tab')];
+  studyTabs.forEach((button, index) => {
+    button.addEventListener('click', () => showStudy(button.dataset.study));
+    button.addEventListener('keydown', (event) => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % studyTabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + studyTabs.length - 1) % studyTabs.length;
+      else if (event.key === 'Home') next = 0;
+      else next = studyTabs.length - 1;
+      showStudy(studyTabs[next].dataset.study);
+      studyTabs[next].focus();
     });
   });
   document.querySelector('#clear-btn').addEventListener('click', () => {
     paste.value = '';
+    deviceType = 'auto';
+    paintDevices();
     showIdle();
   });
   paste.addEventListener('paste', () => {
     pasteStamp = Date.now();
     clearTimeout(debounce);
-    debounce = setTimeout(() => begin(paste.value, null), 30);
+    debounce = setTimeout(() => begin(paste.value, null, { scroll: true }), 30);
   });
   paste.addEventListener('input', () => {
     if (settingValue || Date.now() - pasteStamp < 80) return;
@@ -460,21 +529,11 @@ function wire() {
     paintKeyState();
     settings.showModal();
   });
-  document.querySelector('#save-key').addEventListener('click', () => {
-    const provider = document.querySelector('#provider').value;
-    const model = document.querySelector('#model').value;
-    const typed = document.querySelector('#api-key').value.trim();
-    const existing = loadKey();
-    const key = typed || existing?.key;
-    if (!key) {
-      showToast('Paste a key first. The swarm still runs without one.');
-      return;
-    }
-    saveKey({ provider, model, key });
-    document.querySelector('#api-key').value = '';
-    paintKeyState();
-    showToast('Key saved in this browser only');
+  document.querySelector('#settings-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    persistKey();
   });
+  document.querySelector('#close-settings').addEventListener('click', () => settings.close());
   document.querySelector('#clear-key').addEventListener('click', () => {
     clearKey();
     document.querySelector('#api-key').value = '';
@@ -482,8 +541,8 @@ function wire() {
     showToast('Key removed');
   });
   document.querySelector('#waitlist-btn').addEventListener('click', () => {
-    document.querySelector('#waitlist-note').textContent = 'TODO: nothing was collected. There is no form and no payment link yet.';
-    showToast('No data collected. Waitlist is not connected.');
+    document.querySelector('#waitlist-note').textContent = "Pro isn't open yet. Nothing was collected.";
+    showToast("Pro isn't open yet. Nothing is collected.");
   });
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();

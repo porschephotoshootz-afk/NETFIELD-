@@ -14,10 +14,9 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon-32.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<link rel="preload" href="fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
 <a class="skip" href="#paste">Skip to input</a>
@@ -48,7 +47,7 @@
       <div class="swarm-layout">
         <div class="swarm-in">
           <p class="lede">Paste show output or a symptom. The swarm reads it on this phone and ranks what to fix first.</p>
-          <div class="device-row" id="devices" role="radiogroup" aria-label="Device type"></div>
+          <div class="device-row" id="devices" role="radiogroup" aria-orientation="horizontal" aria-label="Device type"></div>
           <label class="field-label" for="paste">What are you looking at?</label>
           <textarea id="paste" spellcheck="false" placeholder="Paste Cisco show output, or a sentence like “users on VLAN 20 can't reach the internet”."></textarea>
           <div class="input-row">
@@ -67,14 +66,14 @@
 
     <section id="view-study" class="view" hidden>
       <p class="lede">CCNA field cards from the pocket tool. Protocols, checklists, and numbers. They stay on the phone with the swarm.</p>
-      <div class="study-tabs" role="tablist">
-        <button type="button" class="study-tab active" data-study="ref">Quick ref</button>
-        <button type="button" class="study-tab" data-study="lists">Checklists</button>
-        <button type="button" class="study-tab" data-study="cards">Cheatsheet</button>
+      <div class="study-tabs" role="tablist" aria-label="Study topics">
+        <button type="button" class="study-tab active" id="study-tab-ref" role="tab" aria-selected="true" aria-controls="study-ref" data-study="ref">Quick ref</button>
+        <button type="button" class="study-tab" id="study-tab-lists" role="tab" aria-selected="false" aria-controls="study-lists" data-study="lists" tabindex="-1">Checklists</button>
+        <button type="button" class="study-tab" id="study-tab-cards" role="tab" aria-selected="false" aria-controls="study-cards" data-study="cards" tabindex="-1">Cheatsheet</button>
       </div>
-      <div id="study-ref"></div>
-      <div id="study-lists" hidden></div>
-      <div id="study-cards" hidden></div>
+      <div id="study-ref" role="tabpanel" aria-labelledby="study-tab-ref"></div>
+      <div id="study-lists" role="tabpanel" aria-labelledby="study-tab-lists" hidden></div>
+      <div id="study-cards" role="tabpanel" aria-labelledby="study-tab-cards" hidden></div>
     </section>
 
     <section id="view-pro" class="view" hidden>
@@ -89,7 +88,7 @@
         </ul>
         <button type="button" class="waitlist" id="waitlist-btn">Join the Pro waitlist</button>
         <!-- TODO: waitlist does not collect an email, a name, or any other data. No payment link. -->
-        <p class="todo" id="waitlist-note">TODO: the waitlist is not connected. Tapping the button stores nothing and sends nothing.</p>
+        <p class="note" id="waitlist-note">Pro isn't open yet. Nothing is collected.</p>
       </article>
     </section>
   </main>
@@ -113,14 +112,14 @@
     </label>
     <p class="note" id="key-state">No key saved.</p>
     <div class="dialog-actions">
-      <button type="button" class="copy" id="save-key">Save on this phone</button>
+      <button type="submit" class="copy" id="save-key">Save on this phone</button>
       <button type="button" id="clear-key">Remove key</button>
-      <button type="submit" id="close-settings">Close</button>
+      <button type="button" id="close-settings">Close</button>
     </div>
   </form>
 </dialog>
 
-<div id="toast" role="status"></div>
+<div id="toast" role="status" aria-hidden="true"></div>
 <noscript><p>NetField needs JavaScript. Analysis still stays on your device.</p></noscript>
 <script type="module" src="js/app.js"></script>
 </body>
