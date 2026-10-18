@@ -212,7 +212,7 @@ html[data-swarm="running"] .status-dot {
   text-transform: uppercase;
   color: var(--txt3);
 }
-textarea, input[type="password"], input[type="text"], select {
+textarea, input[type="password"], input[type="text"], input[type="email"], select {
   width: 100%;
   border-radius: 14px;
   border: 1px solid var(--border);
@@ -438,6 +438,15 @@ details[open] > summary::before {
 .cs-item { padding: 8px 0; border-bottom: 1px solid var(--border2); }
 .cs-key { font-family: var(--mono); color: var(--acc); }
 
+.signup-form { display: grid; gap: 8px; margin-top: 12px; }
+.signup-form[hidden] { display: none !important; }
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
 .pro-card ul { margin: 10px 0 0; padding-left: 18px; }
 .pro-card li { margin: 6px 0; }
 dialog {

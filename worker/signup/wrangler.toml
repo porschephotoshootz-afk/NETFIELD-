@@ -1,0 +1,21 @@
+name = "toolkit-signup"
+main = "worker.js"
+compatibility_date = "2026-10-18"
+workers_dev = true
+
+# Planned URL: https://toolkit-signup.starswarm.workers.dev
+# Replace the id after `npx wrangler kv namespace create SIGNUPS`.
+# Do not put secret values in this file.
+[[kv_namespaces]]
+binding = "SIGNUPS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[observability]
+enabled = true
+
+  [observability.logs]
+  head_sampling_rate = 1
+
+  [observability.traces]
+  enabled = true
+  head_sampling_rate = 0.01

@@ -8,6 +8,8 @@ import {
 } from '../js/analyzers.js';
 import { redactSecrets } from '../js/deep.js';
 import { SAMPLES } from '../js/samples.js';
+import { SIGNUP_URL, TURNSTILE_SITE_KEY, shouldLoadTurnstile, shouldShowSignupForm } from '../js/config.js';
+import { runSignupTests } from '../worker/signup/test.js';
 
 let passed = 0;
 let failed = 0;
@@ -264,7 +266,7 @@ const manifest = JSON.parse(fs.readFileSync(new URL('../manifest.json', import.m
 assert(manifest.display === 'standalone', 'manifest is standalone');
 assert(manifest.icons.some((icon) => icon.sizes === '192x192'), 'manifest 192 icon');
 assert(manifest.icons.some((icon) => icon.sizes === '512x512'), 'manifest 512 icon');
-const shellFiles = ['index.html', 'sw.js', 'css/app.css', 'js/app.js', 'js/deep.js', 'js/analyzers.js', 'js/samples.js'];
+const shellFiles = ['index.html', 'sw.js', 'css/app.css', 'js/app.js', 'js/config.js', 'js/deep.js', 'js/analyzers.js', 'js/samples.js', 'worker/signup/worker.js'];
 for (const file of shellFiles) {
   const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
   assert(!/gmail\.com/i.test(text), `${file} has no email address`);
@@ -283,9 +285,13 @@ for (const icon of ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-mask
 assert(html.includes('TODO'), 'pro signup placeholder is marked TODO');
 assert(html.includes('<!-- TODO:'), 'TODO stays in a developer comment');
 assert(!/>\s*TODO:/.test(html), 'TODO is not visible text');
-assert(html.includes('Pro is planned. Nothing to sign up for yet.'), 'pro says there is nothing to sign up for');
+assert(html.includes('Signups open soon'), 'pro stays quiet until a signup URL is set');
+assert(html.includes('id="signup-form"'), 'pro has a signup form');
+assert(html.includes('name="company"'), 'signup form has a honeypot');
+assert(html.includes('We store only your email and the signup date, to tell you when Pro opens. No tracking. Ask us to delete it anytime.'), 'signup privacy line');
+assert(!html.includes('challenges.cloudflare.com'), 'the page does not load Turnstile by default');
 assert(!html.includes('waitlist-btn'), 'pro has no waitlist button');
-assert(!html.includes('Join the Pro waitlist'), 'pro does not ask for a signup');
+assert(!html.includes('Join the Pro waitlist'), 'pro does not ask for a waitlist');
 assert(html.includes('offline rule engine'), 'free tier is described as a rule engine');
 assert(html.includes('id="privacy-note"'), 'privacy note is in the app');
 assert(html.includes('The ranked report stays on this device'), 'privacy note says the report stays local');
@@ -360,7 +366,8 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes("const CACHE = 'starswarm-toolkit-v3'"), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'starswarm-toolkit-v4'"), 'service worker cache was bumped');
+assert(worker.includes('./js/config.js'), 'service worker precaches signup config');
 const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
 assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
 assert(worker.includes('fonts/outfit-latin.woff2') && worker.includes('fonts/jetbrains-mono-latin.woff2'), 'service worker precaches the fonts');
@@ -371,7 +378,7 @@ assert(readme.includes('StarSwarm Security Agentic Toolkit'), 'readme uses the n
 assert(readme.includes('https://links.starswarm.workers.dev/'), 'readme links the brand page');
 assert(readme.includes('offline rule engine'), 'readme keeps the free tier honest');
 assert(!/autonomous agents run|swarm of specialist bots/i.test(html + readme + manifest.description), 'free tier is not described as autonomous agents');
-const userFacing = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js'];
+const userFacing = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/config.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js'];
 for (const file of userFacing) {
   const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replaceAll('Formerly NetField', '');
   assert(!text.includes('NetField'), `${file} has no NetField name`);
@@ -387,11 +394,25 @@ assert(html.includes(`property="og:url" content="${pages}"`), 'open graph url is
 assert(html.includes(`property="og:image" content="${pages}screenshots/og.png"`), 'open graph image is absolute');
 assert(html.includes(`name="twitter:image" content="${pages}screenshots/og.png"`), 'twitter image is absolute');
 assert(readme.includes(pages), 'readme uses the new pages url');
-const shipped = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js', 'package.json'];
+const shipped = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/config.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js', 'package.json', 'worker/signup/worker.js', 'worker/signup/wrangler.toml', 'worker/signup/README.md'];
 for (const file of shipped) {
   const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
   assert(!text.includes('NETFIELD-'), `${file} has no old Pages path`);
 }
+
+assert(SIGNUP_URL === '' && TURNSTILE_SITE_KEY === '', 'signup config is empty until deploy');
+assert(shouldShowSignupForm('') === false, 'an empty signup URL hides the form');
+assert(shouldShowSignupForm('https://toolkit-signup.starswarm.workers.dev/api/signup') === true, 'a signup URL shows the form');
+assert(shouldLoadTurnstile('', 'site-key') === false, 'Turnstile stays off without a signup URL');
+assert(shouldLoadTurnstile('https://toolkit-signup.starswarm.workers.dev/api/signup', '') === false, 'Turnstile stays off without a site key');
+assert(shouldLoadTurnstile('https://toolkit-signup.starswarm.workers.dev/api/signup', 'site-key') === true, 'Turnstile loads only with a URL and a site key');
+assert(appJs.includes("You're offline, try again later"), 'signup explains an offline failure');
+assert(appJs.includes('shouldShowSignupForm(SIGNUP_URL)'), 'the form follows the signup URL');
+assert(appJs.includes('shouldLoadTurnstile(SIGNUP_URL, TURNSTILE_SITE_KEY)'), 'Turnstile is gated by config');
+assert(appJs.includes('challenges.cloudflare.com/turnstile/v0/api.js'), 'the Turnstile script URL is present for a configured site key');
+assert(!appJs.includes('Pro is planned'), 'the old planned line is gone');
+
+await runSignupTests(assert);
 
 if (failed) {
   console.error(`\n${passed} passed, ${failed} failed`);

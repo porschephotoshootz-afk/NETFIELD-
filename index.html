@@ -92,8 +92,20 @@
       <article class="pro-card">
         <h2>Pro</h2>
         <p>Formerly NetField. The free check is an offline rule engine. It runs on this device, with no account and no server. AI analysis is optional and uses your own key.</p>
-        <p>Pro is planned. Nothing to sign up for yet.</p>
-        <!-- TODO: a real signup goes here once an email tool is chosen. Do not collect an address before that. -->
+        <p id="signup-soon">Signups open soon</p>
+        <form id="signup-form" class="signup-form" hidden>
+          <label class="settings" for="signup-email">Email
+            <input id="signup-email" name="email" type="email" autocomplete="email" required maxlength="254">
+          </label>
+          <label class="honeypot" aria-hidden="true">Company
+            <input id="signup-company" name="company" type="text" tabindex="-1" autocomplete="off">
+          </label>
+          <div id="turnstile-slot"></div>
+          <button type="submit" class="copy">Email me when Pro opens</button>
+          <p id="signup-status" role="status"></p>
+        </form>
+        <p class="note" id="signup-privacy">We store only your email and the signup date, to tell you when Pro opens. No tracking. Ask us to delete it anytime.</p>
+        <!-- TODO: set SIGNUP_URL in js/config.js to the Worker /api/signup URL after deploy. The form stays hidden until then. -->
       </article>
     </section>
   </main>

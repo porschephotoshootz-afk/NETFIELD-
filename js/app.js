@@ -2,6 +2,7 @@ import { SPECIALISTS, runSwarm } from './analyzers.js';
 import { SAMPLES } from './samples.js';
 import { CS_DATA, REF_DATA, SCENARIOS } from './study.js';
 import { clearKey, deepAnalyze, hasKey, loadKey, redactSecrets, saveKey } from './deep.js';
+import { SIGNUP_URL, TURNSTILE_SITE_KEY, shouldLoadTurnstile, shouldShowSignupForm } from './config.js';
 
 const REVEAL_MS = 420;
 const DEVICES = [
@@ -506,6 +507,65 @@ function persistKey() {
   showToast('Key saved in this browser only');
 }
 
+function wireSignup() {
+  const soon = document.querySelector('#signup-soon');
+  const form = document.querySelector('#signup-form');
+  const status = document.querySelector('#signup-status');
+  if (!shouldShowSignupForm(SIGNUP_URL)) {
+    soon.hidden = false;
+    form.hidden = true;
+    return;
+  }
+  soon.hidden = true;
+  form.hidden = false;
+  if (shouldLoadTurnstile(SIGNUP_URL, TURNSTILE_SITE_KEY)) loadTurnstile();
+  form.addEventListener('submit', (event) => submitSignup(event, status));
+}
+
+function loadTurnstile() {
+  if (document.querySelector('script[data-turnstile]')) return;
+  const script = document.createElement('script');
+  script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  script.async = true;
+  script.defer = true;
+  script.dataset.turnstile = 'true';
+  script.addEventListener('load', () => {
+    if (window.turnstile) window.turnstile.render('#turnstile-slot', { sitekey: TURNSTILE_SITE_KEY });
+  });
+  document.head.append(script);
+}
+
+async function submitSignup(event, status) {
+  event.preventDefault();
+  if (!navigator.onLine) {
+    status.textContent = "You're offline, try again later";
+    return;
+  }
+  const email = document.querySelector('#signup-email').value;
+  const company = document.querySelector('#signup-company').value;
+  const turnstile = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+  status.textContent = 'Sending…';
+  try {
+    const response = await fetch(SIGNUP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, company, turnstile }),
+    });
+    if (response.status === 429) {
+      status.textContent = 'Too many attempts. Try again later.';
+      return;
+    }
+    if (!response.ok) {
+      status.textContent = 'Signup did not go through. Try again later.';
+      return;
+    }
+    status.textContent = "You're on the list.";
+    document.querySelector('#signup-form').reset();
+  } catch {
+    status.textContent = "You're offline, try again later";
+  }
+}
+
 function wire() {
   document.querySelectorAll('.tab').forEach((button) => {
     button.addEventListener('click', () => showView(button.dataset.view));
@@ -572,6 +632,7 @@ function wire() {
   window.addEventListener('online', () => setStatus(statusMessage));
   window.addEventListener('offline', () => setStatus(statusMessage));
   const hash = location.hash.replace('#', '');
+  wireSignup();
   if (hash === 'study' || hash === 'pro') showView(hash);
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});

@@ -1,4 +1,4 @@
-const CACHE = 'starswarm-toolkit-v3';
+const CACHE = 'starswarm-toolkit-v4';
 
 const ASSETS = [
   './',
@@ -9,6 +9,7 @@ const ASSETS = [
   './js/samples.js',
   './js/study.js',
   './js/app.js',
+  './js/config.js',
   './js/deep.js',
   './fonts/outfit-latin.woff2',
   './fonts/jetbrains-mono-latin.woff2',
