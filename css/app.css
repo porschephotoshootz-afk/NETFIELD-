@@ -105,13 +105,29 @@ h1, h2, h3, p { margin: 0; }
 .header-actions { flex: none; gap: 8px; }
 .brand img { width: 40px; height: 40px; border-radius: 12px; }
 h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
   font-size: 22px;
   line-height: 1.1;
   letter-spacing: -0.03em;
   color: var(--acc);
 }
+.wordmark { letter-spacing: -0.03em; }
+.product-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--txt2);
+}
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  h1 {
+  .wordmark {
     background: linear-gradient(90deg, var(--acc), #9be7ff);
     -webkit-background-clip: text;
     background-clip: text;
@@ -472,10 +488,11 @@ label.settings { display: block; margin-top: 12px; }
   .brand { gap: 8px; }
   .brand img { width: 32px; height: 32px; border-radius: 10px; }
   h1 { font-size: 18px; }
+  .product-name { font-size: 11px; line-height: 1.2; }
   .brand-sub { margin-top: 0; font-size: 13px; line-height: 1.2; }
   .header-actions button { padding-inline: 10px; }
   .tab { min-height: 40px; padding: 8px; }
-  #swarm-board, #report { scroll-margin-top: 112px; }
+  #swarm-board, #report { scroll-margin-top: 128px; }
 }
 
 @media (min-width: 960px) {

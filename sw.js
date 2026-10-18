@@ -1,4 +1,4 @@
-const CACHE = 'netfield-pocket-swarm-v3';
+const CACHE = 'starswarm-toolkit-v3';
 
 const ASSETS = [
   './',

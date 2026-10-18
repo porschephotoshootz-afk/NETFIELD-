@@ -4,6 +4,7 @@
  * the user picked, and only after they tap Deep analysis.
  */
 
+// Kept so a key saved before the rebrand still loads. Do not rename without a migration.
 const STORAGE_KEY = 'netfield.byok.v1';
 
 const ENDPOINTS = {

@@ -75,7 +75,7 @@ for (const sample of SAMPLES) {
   const again = runSwarm(sample.text, { deviceType: sample.deviceType });
   assert(JSON.stringify(result) === JSON.stringify(again), `${sample.id} is deterministic`);
   evidenceStaysInsideInput(result, sample.text);
-  assert(result.summary.script.startsWith('! NetField Pocket Swarm'), `${sample.id} script header`);
+  assert(result.summary.script.startsWith('! StarSwarm Security Agentic Toolkit'), `${sample.id} script header`);
   assert(result.summary.confidence >= 80, `${sample.id} confidence ${result.summary.confidence} (${ids(result)})`);
   assert(result.summary.confidenceLabel === 'High', `${sample.id} label`);
 }
@@ -344,7 +344,10 @@ for (const font of ['fonts/outfit-latin.woff2', 'fonts/jetbrains-mono-latin.woff
   assert(bytes.slice(0, 4).toString() === 'wOF2', `${font} is woff2`);
 }
 
-assert(manifest.id === './', 'manifest has an id');
+assert(manifest.name === 'StarSwarm Security Agentic Toolkit', 'manifest name');
+assert(manifest.short_name === 'StarSwarm', 'manifest short name');
+assert(manifest.short_name.length <= 12, 'short name fits a home screen label');
+assert(manifest.id === './', 'manifest id stays so an existing install updates in place');
 assert(manifest.categories.includes('utilities') && manifest.categories.includes('productivity'), 'manifest categories');
 const narrowShot = manifest.screenshots.find((shot) => shot.form_factor === 'narrow');
 const wideShot = manifest.screenshots.find((shot) => shot.form_factor === 'wide');
@@ -354,11 +357,28 @@ for (const shot of [narrowShot, wideShot]) {
   assert(bytes.readUInt32BE(16) + 'x' + bytes.readUInt32BE(20) === shot.sizes, `${shot.src} matches ${shot.sizes}`);
 }
 
-assert(worker.includes("const CACHE = 'netfield-pocket-swarm-v3'"), 'service worker cache was bumped');
+assert(worker.includes("const CACHE = 'starswarm-toolkit-v3'"), 'service worker cache was bumped');
 const og = fs.readFileSync(new URL('../screenshots/og.png', import.meta.url));
 assert(og.readUInt32BE(16) === 1200 && og.readUInt32BE(20) === 630, 'share image is 1200x630');
 assert(worker.includes('fonts/outfit-latin.woff2') && worker.includes('fonts/jetbrains-mono-latin.woff2'), 'service worker precaches the fonts');
-assert(!worker.includes('netfield-pocket-swarm-v1'), 'old cache name is gone');
+assert(!worker.includes('netfield-pocket-swarm'), 'old cache name is gone');
+assert(deepJs.includes("const STORAGE_KEY = 'netfield.byok.v1'"), 'saved keys keep the existing storage key');
+const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+assert(readme.includes('StarSwarm Security Agentic Toolkit'), 'readme uses the new name');
+assert(readme.includes('https://links.starswarm.workers.dev/'), 'readme links the brand page');
+assert(readme.includes('offline rule engine'), 'readme keeps the free tier honest');
+assert(!/autonomous agents run|swarm of specialist bots/i.test(html + readme + manifest.description), 'free tier is not described as autonomous agents');
+const userFacing = ['index.html', 'manifest.json', 'README.md', 'sw.js', 'css/app.css', 'js/app.js', 'js/analyzers.js', 'js/deep.js', 'js/samples.js', 'js/study.js'];
+for (const file of userFacing) {
+  const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').replaceAll('Formerly NetField', '');
+  assert(!text.includes('NetField'), `${file} has no NetField name`);
+  assert(!text.includes('Pocket Swarm'), `${file} has no Pocket Swarm name`);
+}
+assert(html.includes('Formerly NetField'), 'the app keeps a formerly note');
+assert(html.includes('<title>StarSwarm Security Agentic Toolkit</title>'), 'page title');
+assert(html.includes('content="StarSwarm"'), 'home screen title is the short name');
+assert(html.includes('property="og:title" content="StarSwarm Security Agentic Toolkit"'), 'open graph title');
+assert(html.includes('name="twitter:title" content="StarSwarm Security Agentic Toolkit"'), 'twitter title');
 
 if (failed) {
   console.error(`\n${passed} passed, ${failed} failed`);

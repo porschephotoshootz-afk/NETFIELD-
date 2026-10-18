@@ -1,6 +1,6 @@
 {
-  "name": "NetField Pocket Swarm",
-  "short_name": "NetField",
+  "name": "StarSwarm Security Agentic Toolkit",
+  "short_name": "StarSwarm",
   "description": "Offline rule engine for Cisco output and network symptoms. AI analysis is optional and uses your own key.",
   "start_url": "./",
   "scope": "./",
@@ -16,7 +16,7 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "NetField on a phone"
+      "label": "StarSwarm on a phone"
     },
     {
       "src": "screenshots/wide.png",

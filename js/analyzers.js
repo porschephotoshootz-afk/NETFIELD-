@@ -1,5 +1,5 @@
 /**
- * On-device specialists for NetField Pocket Swarm.
+ * On-device rule engine for StarSwarm Security Agentic Toolkit.
  * Parsing, rules, and heuristics only. No network and no API key.
  * The same paste always produces the same findings.
  */
@@ -1605,7 +1605,7 @@ function buildNarrative(actions, provisional, ctx) {
 }
 
 function buildScript(actions) {
-  const lines = ['! NetField Pocket Swarm — read it, then paste on the device'];
+  const lines = ['! StarSwarm Security Agentic Toolkit — read it, then paste on the device'];
   const list = actions.filter((item) => item.commands?.length).slice(0, 8);
   if (!list.length) {
     lines.push('! No configuration changes suggested from this paste.');
