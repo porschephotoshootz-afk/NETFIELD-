@@ -280,10 +280,12 @@ assert(worker.includes('caches.open'), 'service worker caches the app');
 for (const icon of ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png']) {
   assert(fs.statSync(new URL(`../${icon}`, import.meta.url)).size > 200, `${icon} exists`);
 }
-assert(html.includes('TODO'), 'pro waitlist is marked TODO');
+assert(html.includes('TODO'), 'pro signup placeholder is marked TODO');
 assert(html.includes('<!-- TODO:'), 'TODO stays in a developer comment');
 assert(!/>\s*TODO:/.test(html), 'TODO is not visible text');
-assert(html.includes("Pro isn't open yet. Nothing is collected."), 'pro note is user-facing');
+assert(html.includes('Pro is planned. Nothing to sign up for yet.'), 'pro says there is nothing to sign up for');
+assert(!html.includes('waitlist-btn'), 'pro has no waitlist button');
+assert(!html.includes('Join the Pro waitlist'), 'pro does not ask for a signup');
 assert(html.includes('offline rule engine'), 'free tier is described as a rule engine');
 assert(html.includes('id="privacy-note"'), 'privacy note is in the app');
 assert(html.includes('The ranked report stays on this device'), 'privacy note says the report stays local');
@@ -316,7 +318,8 @@ const inputAt = appJs.indexOf("addEventListener('input'");
 assert(!appJs.slice(inputAt, inputAt + 280).includes('scroll: true'), 'typing does not request a scroll');
 assert(appJs.includes('await navigator.clipboard.writeText(text)'), 'copy waits for the clipboard');
 assert(!/copyText\(chip\.cmd\);\s*showToast/.test(appJs), 'chip toast is not fired before copy resolves');
-assert(appJs.includes("Pro isn't open yet. Nothing is collected."), 'waitlist toast is honest');
+assert(!appJs.includes('waitlist-btn'), 'the waitlist handler is gone');
+assert(!appJs.includes("Pro isn't open yet"), 'the waitlist toast is gone');
 assert(!appJs.includes('Waitlist is not connected'), 'old waitlist toast is gone');
 assert(appJs.includes('aria-expanded'), 'ref cards expose aria-expanded');
 assert(appJs.includes('ArrowLeft') && appJs.includes("tabindex: selected ? '0' : '-1'"), 'device radios rove with arrow keys');

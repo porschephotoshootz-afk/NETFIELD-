@@ -173,7 +173,7 @@ html[data-swarm="running"] .status-dot {
   padding: 4px;
   border-radius: 12px;
 }
-.tab, .header-actions button, .input-row button, .copy, .waitlist, .deep-btn, .chip, .study-tab {
+.tab, .header-actions button, .input-row button, .copy, .deep-btn, .chip, .study-tab {
   min-height: 48px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -375,7 +375,7 @@ pre, .cmd {
   word-break: break-word;
   color: var(--grn);
 }
-.copy, .deep-btn, .waitlist {
+.copy, .deep-btn {
   background: linear-gradient(135deg, var(--acc), var(--acc2));
   color: #041018;
   border: 0;

@@ -557,10 +557,6 @@ function wire() {
     paintKeyState();
     showToast('Key removed');
   });
-  document.querySelector('#waitlist-btn').addEventListener('click', () => {
-    document.querySelector('#waitlist-note').textContent = "Pro isn't open yet. Nothing was collected.";
-    showToast("Pro isn't open yet. Nothing is collected.");
-  });
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstall = event;
